@@ -325,9 +325,10 @@ class ChatStore {
     startNewConversation() {
         this.messages = [];
         this.sessionId = "";
-        localStorage.removeItem("chatSessionId");
         this.error = "";
-        this.saveMessages();
+        // Clear all chat data from localStorage
+        localStorage.removeItem("chatSessionId");
+        localStorage.removeItem("chatMessages");
     }
 }
 
