@@ -7,12 +7,30 @@ datasource db {
 }
 
 model Conversation {
-  id        String    @id
-  createdAt DateTime  @default(now())
+  id        String                 @id
+  createdAt DateTime               @default(now())
   updatedAt DateTime
   Message   Message[]
+  metadata  ConversationMetadata?
 
   @@index([createdAt])
+}
+
+model ConversationMetadata {
+  id             String       @id @default(cuid())
+  conversationId String       @unique
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  // Extracted entities
+  orderNumber    String?
+  trackingNumber String?
+  packageId      String?
+  customerEmail  String?
+  productName    String?
+
+  // Metadata
+  extractedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Message {

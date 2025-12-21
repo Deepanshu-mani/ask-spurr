@@ -102,7 +102,6 @@ class ChatStore {
         }
 
         this.error = "";
-        this.isLoading = true;
 
         const tempUserMsg: Message = {
             id: tempId,
@@ -114,6 +113,9 @@ class ChatStore {
 
         this.messages = [...this.messages, tempUserMsg];
         this.saveMessages();
+
+        // Set loading AFTER adding user message so it appears first
+        this.isLoading = true;
 
         await this.processMessage(tempUserMsg, userMessage);
     }

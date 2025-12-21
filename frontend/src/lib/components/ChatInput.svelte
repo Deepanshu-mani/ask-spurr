@@ -1,110 +1,47 @@
 <script lang="ts">
-	export let value: string;
-	export let onSend: () => void;
-	export let onKeyPress: (event: KeyboardEvent) => void;
-	export let disabled: boolean = false;
+  export let value: string;
+  export let onSend: () => void;
+  export let onKeyPress: (event: KeyboardEvent) => void;
+  export let disabled: boolean = false;
+
+  let isFocused = false;
 </script>
 
-<div class="input-area">
-	<div class="input-wrapper">
-		<input
-			type="text"
-			bind:value
-			onkeypress={onKeyPress}
-			placeholder="Ask anything about our store..."
-			{disabled}
-			class="message-input"
-		/>
-		<button
-			onclick={onSend}
-			disabled={disabled || !value.trim()}
-			class="send-button"
-			aria-label="Send message"
-		>
-			<img src="/send.png" alt="Send" class="send-icon" />
-		</button>
-	</div>
+<div class="px-8 pb-6 pt-4">
+  <div
+    class="max-w-4xl mx-auto glass rounded-full px-2 py-2 transition-all duration-300 {isFocused
+      ? 'shadow-glass-hover ring-2 ring-brand-500/30'
+      : 'shadow-glass'}"
+  >
+    <div class="flex gap-3 items-center">
+      <input
+        type="text"
+        bind:value
+        onkeypress={onKeyPress}
+        onfocus={() => (isFocused = true)}
+        onblur={() => (isFocused = false)}
+        placeholder="Ask anything about our store..."
+        {disabled}
+        class="flex-1 bg-transparent border-none outline-none px-5 py-3 text-[0.9375rem] text-slate-700 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-60 message-input"
+      />
+      <button
+        onclick={onSend}
+        disabled={disabled || !value.trim()}
+        class="group w-11 h-11 p-0 bg-[#157adf] border-none rounded-full cursor-pointer transition-all duration-200 flex items-center justify-center shadow-lg shadow-brand-500/30 hover:shadow-xl hover:shadow-brand-500/40 hover:scale-105 active:scale-95 disabled:bg-slate-200 disabled:cursor-not-allowed disabled:shadow-none disabled:scale-100"
+        aria-label="Send message"
+      >
+        <img
+          src="/send.png"
+          alt="Send"
+          class="w-6 h-6 object-contain transition-transform duration-200 group-hover:translate-x-0.5"
+        />
+      </button>
+    </div>
+  </div>
 </div>
 
 <style>
-	.input-area {
-		background: white;
-		padding: 1.5rem 2rem 1.25rem;
-		border-top: 1px solid #e2e8f0;
-		flex-shrink: 0;
-	}
-
-	.input-wrapper {
-		display: flex;
-		gap: 0.75rem;
-		align-items: center;
-		background: #f7fafc;
-		border: 2px solid #e2e8f0;
-		border-radius: 16px;
-		padding: 0.5rem;
-		transition: all 0.2s;
-	}
-
-	.input-wrapper:focus-within {
-		border-color: #667eea;
-		background: white;
-		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-	}
-
-	.message-input {
-		flex: 1;
-		background: transparent;
-		border: none;
-		outline: none;
-		padding: 0.75rem 1rem;
-		font-size: 0.95rem;
-		color: #2d3748;
-		font-family: inherit;
-	}
-
-	.message-input::placeholder {
-		color: #a0aec0;
-	}
-
-	.message-input:disabled {
-		cursor: not-allowed;
-		opacity: 0.6;
-	}
-
-	.send-button {
-		width: 44px;
-		height: 44px;
-		padding: 0;
-		background: linear-gradient(135deg, #167adf 0%, #1366c0 100%);
-		border: none;
-		border-radius: 12px;
-		cursor: pointer;
-		transition: all 0.2s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		box-shadow: 0 2px 8px rgba(22, 122, 223, 0.3);
-	}
-
-	.send-button:hover:not(:disabled) {
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(22, 122, 223, 0.4);
-	}
-
-	.send-button:active:not(:disabled) {
-		transform: translateY(0);
-	}
-
-	.send-button:disabled {
-		background: #cbd5e0;
-		cursor: not-allowed;
-		box-shadow: none;
-	}
-
-	.send-icon {
-		width: 24px;
-		height: 24px;
-		object-fit: contain;
-	}
-
+  .message-input:focus {
+    outline: none;
+  }
 </style>

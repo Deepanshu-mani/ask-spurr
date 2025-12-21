@@ -1,103 +1,58 @@
 <script lang="ts">
-	export let onNewChat: () => void;
-	export let sessionId: string;
+  export let onNewChat: () => void;
 </script>
 
-<div class="chat-header">
-	<div class="header-left">
-		<div class="logo">
-			<img src="/robot.png" alt="ShopEase AI" class="logo-icon" />
-			<div class="logo-text">
-				<h1>Ask AI</h1>
-				<p>AI-Powered Customer Service</p>
-			</div>
-		</div>
-	</div>
-	{#if sessionId}
-		<button class="new-chat-btn" onclick={onNewChat}>
-			<svg
-				width="16"
-				height="16"
-				viewBox="0 0 16 16"
-				fill="none"
-				xmlns="http://www.w3.org/2000/svg"
-			>
-				<path
-					d="M8 1V15M1 8H15"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-				/>
-			</svg>
-			New Chat
-		</button>
-	{/if}
+<div class="glass sticky top-0 z-40 border-b border-white/30">
+  <div class="max-w-7xl mx-auto  py-5 flex justify-between items-center">
+    <div class="flex items-center gap-3.5">
+      <img
+        src="/robot.png"
+        alt="Ask AI"
+        class="w-10 h-10 object-contain drop-shadow-lg transform transition-transform duration-300 hover:scale-110"
+      />
+      <div>
+        <h1 class="text-xl font-semibold text-slate-900 tracking-tight">
+          Ask AI
+        </h1>
+        <p class="text-xs text-slate-600 mt-0.5">AI-Powered Customer Service</p>
+      </div>
+    </div>
+    <button
+      onclick={onNewChat}
+      class="group flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-full text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-brand-500/30 hover:scale-105 active:scale-95"
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        class="transition-transform duration-200 group-hover:rotate-90"
+      >
+        <path
+          d="M8 1V15M1 8H15"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+      New Chat
+    </button>
+  </div>
 </div>
 
 <style>
-	.chat-header {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		padding: 1.5rem 2rem;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-		flex-shrink: 0;
-	}
+  @keyframes glow {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 8px rgba(79, 125, 255, 0.4));
+    }
+    50% {
+      filter: drop-shadow(0 0 16px rgba(79, 125, 255, 0.6));
+    }
+  }
 
-	.header-left {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-
-	.logo {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-
-	.logo-icon {
-		width: 48px;
-		height: 48px;
-		object-fit: contain;
-		filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
-	}
-
-	.logo-text h1 {
-		margin: 0;
-		font-size: 1.5rem;
-		font-weight: 700;
-		color: white;
-		letter-spacing: -0.5px;
-	}
-
-	.logo-text p {
-		margin: 0.25rem 0 0 0;
-		font-size: 0.875rem;
-		color: rgba(255, 255, 255, 0.9);
-		font-weight: 400;
-	}
-
-	.new-chat-btn {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		background: rgba(255, 255, 255, 0.15);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		color: white;
-		padding: 0.75rem 1.5rem;
-		border-radius: 12px;
-		cursor: pointer;
-		font-size: 0.95rem;
-		font-weight: 600;
-		transition: all 0.2s;
-	}
-
-	.new-chat-btn:hover {
-		background: rgba(255, 255, 255, 0.25);
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	}
+  .group:hover svg {
+    animation: glow 2s ease-in-out infinite;
+  }
 </style>

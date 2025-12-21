@@ -23,14 +23,18 @@ export interface ConversationMessage {
     text: string;
 }
 
+import type { ConversationMetadata } from './metadataService.js';
+
 /**
  * Stream LLM response for chat support agent
  * @param userMessage - User's question
  * @param conversationHistory - Previous messages in the conversation
+ * @param metadata - Extracted customer metadata (order numbers, etc.)
  */
 export async function* streamChatResponse(
     userMessage: string,
     conversationHistory: ConversationMessage[] = [],
+    metadata?: ConversationMetadata | null,
 ) {
     let lastError: Error | null = null;
 
@@ -40,6 +44,21 @@ export async function* streamChatResponse(
         if (!validation.success) {
             yield `Error: ${validation.error.issues[0]?.message || 'Invalid message'}`;
             return;
+        }
+
+        // Build customer context from metadata
+        let customerContext = '';
+        if (metadata) {
+            const details: string[] = [];
+            if (metadata.orderNumber) details.push(`Order Number: ${metadata.orderNumber}`);
+            if (metadata.trackingNumber) details.push(`Tracking Number: ${metadata.trackingNumber}`);
+            if (metadata.packageId) details.push(`Package ID: ${metadata.packageId}`);
+            if (metadata.customerEmail) details.push(`Email: ${metadata.customerEmail}`);
+            if (metadata.productName) details.push(`Product: ${metadata.productName}`);
+
+            if (details.length > 0) {
+                customerContext = `\n\nCUSTOMER CONTEXT:\n${details.join('\n')}`;
+            }
         }
 
         // Build messages array with system prompt and conversation history
@@ -60,13 +79,16 @@ IMPORTANT RULES:
 3. Keep responses brief (2-3 sentences max unless more detail is needed)
 4. Use a friendly, conversational tone
 5. If asked about topics outside the knowledge base, say: "I don't have that information right now, but I can connect you with a human agent who can help. Would you like me to do that?"
+6. **CONVERSATION MEMORY**: When the user asks "what was my last message" or "what did I just say", refer to their PREVIOUS message in the conversation history, NOT the current question they're asking.
+7. **USE CUSTOMER CONTEXT**: If customer details are provided below, use them to give personalized responses. For example, if they ask "what's my order number?", use the order number from the context.
 
-${getFAQContext()}`,
+${getFAQContext()}${customerContext}`,
             },
         ];
 
         // Add conversation history (last 5 messages for context)
         const recentHistory = conversationHistory.slice(-5);
+        console.log(`🧠 Using ${recentHistory.length} messages for context`);
         for (const msg of recentHistory) {
             messages.push({
                 role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -82,8 +104,8 @@ ${getFAQContext()}`,
 
         // Try multiple models in case of rate limits or failures
         const models = [
-            'gemini-2.5-flash',
             'gemini-2.5-flash-lite',
+            'gemini-2.5-flash',
             'gemini-2.0-flash-exp',
             'gemini-1.5-flash',
         ];

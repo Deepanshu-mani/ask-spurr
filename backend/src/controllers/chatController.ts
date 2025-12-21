@@ -9,6 +9,8 @@ import {
 import { streamChatResponse } from '../services/llmService.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { ChatMessageRequest, ChatMessageResponse, ConversationHistoryResponse } from '../types/api.js';
+import { extractEntities, hasEntities } from '../services/entityExtractor.js';
+import { updateConversationMetadata, getConversationMetadata } from '../services/metadataService.js';
 
 /**
  * POST /chat/message
@@ -33,14 +35,37 @@ export async function sendMessage(req: Request, res: Response) {
 
     // Get conversation history for context BEFORE saving current message
     const history = await getConversationHistory(conversationId);
+    console.log(`📚 Conversation history: ${history.length} messages`);
 
     // Save user message
     await saveMessage(conversationId, 'user', message.trim());
 
+    // Extract entities from user message (async, don't block)
+    console.log(`🔎 Starting entity extraction for message: "${message.trim()}"`);
+    extractEntities(message.trim()).then(async (entities) => {
+        console.log(`📦 Raw extracted entities:`, JSON.stringify(entities, null, 2));
+        if (hasEntities(entities)) {
+            console.log(`🔍 Extracted entities:`, entities);
+            try {
+                await updateConversationMetadata(conversationId, entities);
+                console.log(`✅ Metadata updated successfully`);
+            } catch (err) {
+                console.error('❌ Failed to update metadata:', err);
+            }
+        } else {
+            console.log(`⚠️  No entities found in message`);
+        }
+    }).catch((err: Error) => {
+        console.error('Entity extraction failed:', err);
+    });
+
+    // Get current metadata for context
+    const metadata = await getConversationMetadata(conversationId);
+
     // Generate AI response
     let aiReply = '';
     try {
-        for await (const chunk of streamChatResponse(message.trim(), history)) {
+        for await (const chunk of streamChatResponse(message.trim(), history, metadata)) {
             aiReply += chunk;
         }
     } catch (error) {
@@ -81,7 +106,7 @@ export async function getConversationMessages(req: Request, res: Response) {
     }
 
     // Format messages for frontend
-    const messages = conversation.messages.map((msg) => ({
+    const messages = conversation.Message.map((msg) => ({
         id: msg.id,
         sender: msg.sender,
         text: msg.text,

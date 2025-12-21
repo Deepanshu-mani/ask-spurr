@@ -7,7 +7,10 @@ import type { ConversationMessage } from './llmService.js';
  */
 export async function createConversation() {
     return await prisma.conversation.create({
-        data: {},
+        data: {
+            id: crypto.randomUUID(),
+            updatedAt: new Date(),
+        },
     });
 }
 
@@ -18,7 +21,7 @@ export async function getConversation(conversationId: string) {
     return await prisma.conversation.findUnique({
         where: { id: conversationId },
         include: {
-            messages: {
+            Message: {
                 orderBy: { createdAt: 'asc' },
             },
         },
@@ -35,6 +38,7 @@ export async function saveMessage(
 ) {
     return await prisma.message.create({
         data: {
+            id: crypto.randomUUID(),
             conversationId,
             sender,
             text,

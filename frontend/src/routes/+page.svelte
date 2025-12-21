@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
+  import { fly, fade } from "svelte/transition";
+  import { cubicOut } from "svelte/easing";
   import ChatHeader from "$lib/components/ChatHeader.svelte";
   import MessageBubble from "$lib/components/MessageBubble.svelte";
   import TypingIndicator from "$lib/components/TypingIndicator.svelte";
@@ -7,21 +9,26 @@
   import WelcomeScreen from "$lib/components/WelcomeScreen.svelte";
   import { chatStore } from "$lib/stores/chatStore.svelte";
 
-  let messagesContainer: HTMLDivElement;
+  let messagesContainer = $state<HTMLDivElement>();
+  let mounted = $state(false);
 
   onMount(() => {
     chatStore.init();
+    setTimeout(() => (mounted = true), 50);
     return () => chatStore.destroy();
   });
 
-  // Auto-scroll
+  // Auto-scroll with smooth behavior
   $effect(() => {
     chatStore.messages.length;
     chatStore.isLoading;
 
     if (messagesContainer) {
       setTimeout(() => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        messagesContainer.scrollTo({
+          top: messagesContainer.scrollHeight,
+          behavior: "smooth",
+        });
       }, 100);
     }
   });
@@ -44,140 +51,116 @@
   }
 </script>
 
-<div class="chat-container">
-  <ChatHeader
-    sessionId={chatStore.sessionId}
-    onNewChat={() => chatStore.startNewConversation()}
-  />
+<div class="relative w-screen h-screen overflow-hidden">
+  <!-- Gradient Mesh Background -->
+  <div
+    class="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100/50 to-white"
+  ></div>
 
-  <div class="messages-wrapper">
-    <div class="messages-container" bind:this={messagesContainer}>
-      {#if chatStore.messages.length === 0}
-        <WelcomeScreen onSuggestionClick={setSuggestion} />
-      {:else}
-        <div class="messages-list">
-          {#each chatStore.messages as message (message.id)}
-            <MessageBubble
-              sender={message.sender}
-              text={message.text}
-              status={message.status}
-              onRetry={() => chatStore.retryMessage(message.id)}
-            />
-          {/each}
-
-          {#if chatStore.isLoading}
-            <TypingIndicator />
-          {/if}
-        </div>
-      {/if}
-    </div>
+  <!-- Rectangle.png pattern overlay -->
+  <div class="absolute inset-0 pointer-events-none opacity-80">
+    <img src="/Rectangle.png" alt="" class="w-full h-full object-center" />
   </div>
 
-  {#if chatStore.error}
-    <div class="error-banner">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path
-          d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM11 15H9V13H11V15ZM11 11H9V5H11V11Z"
-          fill="currentColor"
-        />
-      </svg>
-      <span>{chatStore.error}</span>
+  <!-- Main Content with fade-in animation -->
+  {#if mounted}
+    <div class="relative z-10 flex flex-col h-full" in:fade={{ duration: 400 }}>
+      <ChatHeader onNewChat={() => chatStore.startNewConversation()} />
+
+      <div class="flex-1 overflow-hidden min-h-0">
+        <div
+          class="h-full overflow-y-auto px-8 py-8 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-400/60"
+          bind:this={messagesContainer}
+        >
+          {#if chatStore.messages.length === 0}
+            <WelcomeScreen onSuggestionClick={setSuggestion} />
+          {:else}
+            <div class="flex flex-col gap-6 max-w-6xl mx-auto">
+              {#each chatStore.messages as message, i (message.id)}
+                {#if message.sender === "user"}
+                  <!-- User messages appear instantly -->
+                  <div>
+                    <MessageBubble
+                      sender={message.sender}
+                      text={message.text}
+                      status={message.status}
+                      onRetry={() => chatStore.retryMessage(message.id)}
+                    />
+                  </div>
+                {:else}
+                  <!-- AI messages have smooth animation -->
+                  <div in:fly={{ y: 10, duration: 400, easing: cubicOut }}>
+                    <MessageBubble
+                      sender={message.sender}
+                      text={message.text}
+                      status={message.status}
+                      onRetry={() => chatStore.retryMessage(message.id)}
+                    />
+                  </div>
+                {/if}
+              {/each}
+
+              {#if chatStore.isLoading}
+                <div in:fly={{ y: 10, duration: 400, easing: cubicOut }}>
+                  <TypingIndicator />
+                </div>
+              {/if}
+            </div>
+          {/if}
+        </div>
+      </div>
+
+      {#if chatStore.error}
+        <div
+          class="fixed top-20 left-1/2 -translate-x-1/2 z-50"
+          in:fly={{ y: -20, duration: 300 }}
+        >
+          <div class="glass flex items-center gap-3 px-6 py-3 rounded-2xl">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              class="text-red-500"
+            >
+              <path
+                d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM11 15H9V13H11V15ZM11 11H9V5H11V11Z"
+                fill="currentColor"
+              />
+            </svg>
+            <span class="text-sm font-medium text-red-600"
+              >{chatStore.error}</span
+            >
+          </div>
+        </div>
+      {/if}
+
+      <ChatInput
+        bind:value={chatStore.inputMessage}
+        onSend={() => chatStore.sendMessage()}
+        onKeyPress={handleKeyPress}
+        disabled={chatStore.isLoading}
+      />
     </div>
   {/if}
-
-  <ChatInput
-    bind:value={chatStore.inputMessage}
-    onSend={() => chatStore.sendMessage()}
-    onKeyPress={handleKeyPress}
-    disabled={chatStore.isLoading}
-  />
 </div>
 
 <style>
-  :global(body) {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-      "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-      "Helvetica Neue", sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow: hidden;
+  /* Custom scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
   }
 
-  .chat-container {
-    width: 100vw;
-    height: 100vh;
-    background: white;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .messages-wrapper {
-    flex: 1;
-    overflow: hidden;
-    background: #f8f9fa;
-    min-height: 0;
-  }
-
-  .messages-container {
-    height: 90%;
-    overflow-y: auto;
-    padding: 2rem;
-    scroll-behavior: smooth;
-  }
-
-  .messages-container::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .messages-container::-webkit-scrollbar-track {
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .messages-container::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 4px;
+  .scrollbar-thumb-slate-300\/50::-webkit-scrollbar-thumb {
+    background: rgba(203, 213, 225, 0.5);
+    border-radius: 3px;
   }
 
-  .messages-container::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-  }
-
-  .messages-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .error-banner {
-    position: absolute;
-    top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: #fff5f5;
-    color: #c53030;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid #feb2b2;
-    border-radius: 99px;
-    font-size: 0.9rem;
-    box-shadow: 0 4px 12px rgba(197, 48, 48, 0.15);
-    z-index: 100;
-    animation: slideDown 0.3s ease-out;
-  }
-
-  @keyframes slideDown {
-    from {
-      transform: translate(-50%, -100%);
-      opacity: 0;
-    }
-    to {
-      transform: translate(-50%, 0);
-      opacity: 1;
-    }
+  .scrollbar-thumb-slate-300\/50::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.6);
   }
 </style>
