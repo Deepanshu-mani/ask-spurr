@@ -20,17 +20,18 @@ export async function sendMessage(req: Request, res: Response) {
     const { message, sessionId } = req.body as ChatMessageRequest;
 
     // Get or create conversation
-    let conversationId = sessionId;
+    let conversationId: string;
 
-    if (!conversationId) {
+    if (!sessionId) {
         const newConversation = await createConversation();
         conversationId = newConversation.id;
     } else {
         // Verify conversation exists
-        const exists = await conversationExists(conversationId);
+        const exists = await conversationExists(sessionId);
         if (!exists) {
             throw new AppError(404, 'Conversation not found. Please start a new conversation.');
         }
+        conversationId = sessionId;
     }
 
     // Get conversation history for context BEFORE saving current message
