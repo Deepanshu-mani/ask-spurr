@@ -69,13 +69,13 @@
 
       <div class="flex-1 overflow-hidden min-h-0">
         <div
-          class="h-full overflow-y-auto px-8 py-8 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-400/60"
+          class="h-full overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-400/60"
           bind:this={messagesContainer}
         >
           {#if chatStore.messages.length === 0}
             <WelcomeScreen onSuggestionClick={setSuggestion} />
           {:else}
-            <div class="flex flex-col gap-6 max-w-6xl mx-auto">
+            <div class="flex flex-col gap-4 sm:gap-6 max-w-6xl mx-auto">
               {#each chatStore.messages as message, i (message.id)}
                 {#if message.sender === "user"}
                   <!-- User messages appear instantly -->
@@ -112,23 +112,26 @@
 
       {#if chatStore.error}
         <div
-          class="fixed top-20 left-1/2 -translate-x-1/2 z-50"
+          class="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 w-[90%] sm:w-auto max-w-md"
           in:fly={{ y: -20, duration: 300 }}
         >
-          <div class="glass flex items-center gap-3 px-6 py-3 rounded-2xl">
+          <div
+            class="glass flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl"
+          >
             <svg
-              width="20"
-              height="20"
+              width="18"
+              height="18"
               viewBox="0 0 20 20"
               fill="none"
-              class="text-red-500"
+              class="text-red-500 flex-shrink-0 sm:w-5 sm:h-5"
             >
               <path
                 d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM11 15H9V13H11V15ZM11 11H9V5H11V11Z"
                 fill="currentColor"
               />
             </svg>
-            <span class="text-sm font-medium text-red-600"
+            <span
+              class="text-xs sm:text-sm font-medium text-red-600 line-clamp-2"
               >{chatStore.error}</span
             >
           </div>
