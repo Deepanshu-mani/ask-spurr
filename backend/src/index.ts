@@ -10,8 +10,24 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+// Allow multiple origins for development and production
+const allowedOrigins = [
+    'http://localhost:5173',  // Local development
+    'http://localhost:3000',  // Alternative local port
+    process.env.FRONTEND_URL, // Production frontend URL from env
+].filter(Boolean); // Remove undefined values
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 app.use(express.json());
