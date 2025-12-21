@@ -32,7 +32,7 @@
         <div
           class="px-5 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-3xl rounded-br-md shadow-lg shadow-brand-500/20 font-medium leading-relaxed {status ===
           'error'
-            ? '!bg-red-50 !text-red-600 !shadow-none border border-red-200'
+            ? 'opacity-60'
             : ''}"
         >
           <div class="text-[0.9375rem]">{text}</div>
@@ -41,7 +41,7 @@
           <button
             on:click={onRetry}
             title="Retry sending"
-            class="absolute -left-10 top-1/2 -translate-y-1/2 bg-white border border-red-200 text-red-500 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 hover:bg-red-500 hover:text-white hover:scale-110"
+            class="absolute -left-10 top-1/2 -translate-y-1/2 bg-white/80 border border-slate-200 text-slate-500 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-200 hover:bg-brand-500 hover:text-white hover:border-brand-500 hover:scale-110"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +60,7 @@
               <path d="M22 12.5a10 10 0 0 1-18.8 4.2L2.5 16"></path>
             </svg>
           </button>
-          <div class="text-xs text-red-500 mt-1.5 font-medium">
+          <div class="text-xs text-slate-400 mt-1.5 font-medium">
             Failed to send
           </div>
         {/if}
