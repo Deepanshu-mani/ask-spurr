@@ -51,7 +51,7 @@
   }
 </script>
 
-<div class="relative w-screen h-screen overflow-hidden">
+<div class="relative w-screen h-screen overflow-hidden" style="height: 100dvh;">
   <!-- Gradient Mesh Background -->
   <div
     class="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100/50 to-white"
