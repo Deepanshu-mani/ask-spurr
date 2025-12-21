@@ -44,6 +44,9 @@ class ChatStore {
             this.syncOfflineMessages();
         }
 
+        // Start keep-alive ping for Render free tier
+        this.startKeepAlive();
+
         // Auto-save effect logic fits better in the component using $effect usually, 
         // or we can set up a reaction here if we were using a slightly different pattern.
         // For this refactor, we'll keep the persistence logic simple: 
@@ -54,6 +57,34 @@ class ChatStore {
         if (typeof window !== "undefined") {
             window.removeEventListener("online", () => this.syncOfflineMessages());
             this.stopHeartbeat();
+            this.stopKeepAlive();
+        }
+    }
+
+    // Keep backend alive (Render free tier sleeps after 15min)
+    private keepAliveTimer: any;
+
+    startKeepAlive() {
+        if (this.keepAliveTimer) return;
+
+        // Ping every 5 minutes
+        this.keepAliveTimer = setInterval(async () => {
+            try {
+                await fetch(`${API_URL}/health`);
+                console.log("🏓 Ping sent to keep backend alive");
+            } catch (e) {
+                // Ignore errors
+            }
+        }, 5 * 60 * 1000); // 5 minutes
+
+        // Initial ping
+        fetch(`${API_URL}/health`).catch(() => { });
+    }
+
+    stopKeepAlive() {
+        if (this.keepAliveTimer) {
+            clearInterval(this.keepAliveTimer);
+            this.keepAliveTimer = null;
         }
     }
 
