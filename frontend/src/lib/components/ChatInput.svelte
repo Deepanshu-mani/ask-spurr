@@ -8,7 +8,8 @@
 </script>
 
 <div
-  class="bg-white/95 sm:bg-transparent border-t border-slate-200 sm:border-0 rounded-t-2xl sm:rounded-none shadow-[0_-4px_20px_rgba(0,0,0,0.08)] sm:shadow-none px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 pt-3 sm:pt-4"
+  class="bg-white/95 sm:bg-transparent border-t border-slate-200 sm:border-0 rounded-t-2xl sm:rounded-none shadow-[0_-4px_20px_rgba(0,0,0,0.08)] sm:shadow-none px-4 sm:px-6 lg:px-8 pb-6 sm:pb-6 pt-3 sm:pt-4"
+  style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));"
 >
   <div
     class="max-w-4xl mx-auto sm:glass rounded-full px-1.5 sm:px-2 py-1 sm:py-2 transition-all duration-300 {isFocused
