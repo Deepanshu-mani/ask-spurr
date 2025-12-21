@@ -86,6 +86,7 @@ The project follows a **Layered Architecture** to separate concerns and ensure m
 1.  **Reactive Store (Frontend)**: All frontend logic (offline sync, heartbeat, API calls) is centralized in a Svelte 5 Reactive Store (`chatStore.svelte.ts`). This keeps the UI components "dumb" and purely for rendering.
 2.  **Stateless API**: The backend is RESTful and uses the `sessionId` passed in each request to retrieve context, making the service easily scalable.
 3.  **Resilience First**: The system includes a custom "Heartbeat" mechanism with exponential backoff to handle server outages gracefully, and a "Batch Sync" system to recover context when coming back online.
+4.  **Mobile-First Responsive Design**: The UI is fully responsive with optimized layouts for mobile, tablet, and desktop - including compact headers, docked input areas on mobile, and horizontal card layouts for better touch interactions.
 
 ---
 
