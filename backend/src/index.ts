@@ -58,6 +58,18 @@ app.use(errorHandler);
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
+
+    // Self-ping every 14 minutes to prevent Render free-tier from sleeping
+    // (Render sleeps instances after 15 minutes of inactivity)
+    const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+    setInterval(async () => {
+        try {
+            await fetch(`${SELF_URL}/health`);
+            console.log('🏓 Self-ping sent to keep server alive');
+        } catch {
+            // Ignore – server is still starting or network blip
+        }
+    }, 14 * 60 * 1000); // 14 minutes
 });
 
 // Graceful shutdown
