@@ -52,12 +52,12 @@ export async function saveMessage(
 export async function getConversationHistory(
     conversationId: string,
 ): Promise<ConversationMessage[]> {
-    // Only fetch the last 20 messages for context
+    // Keep the model context intentionally small for cost and latency control.
     // We take from the end (descending) and then need to reverse them back to chronological order
     const messages = await prisma.message.findMany({
         where: { conversationId },
         orderBy: { createdAt: 'desc' },
-        take: 20,
+        take: 5,
     });
 
     // Reverse to get chronological order (oldest to newest)

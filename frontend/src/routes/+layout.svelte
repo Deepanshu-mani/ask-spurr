@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-  <link rel="icon" href="/robot.png" />
+  <link rel="icon" href="https://cdn.spurnow.com/360/7799_spurlogobluebg.svg" />
 </svelte:head>
 
 {@render children()}

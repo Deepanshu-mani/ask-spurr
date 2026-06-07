@@ -18,7 +18,7 @@
     return () => chatStore.destroy();
   });
 
-  // Auto-scroll with smooth behavior
+  // Auto-scroll to bottom on new messages / loading state changes
   $effect(() => {
     chatStore.messages.length;
     chatStore.isLoading;
@@ -29,16 +29,14 @@
           top: messagesContainer.scrollHeight,
           behavior: "smooth",
         });
-      }, 100);
+      }, 80);
     }
   });
 
   function setSuggestion(text: string) {
     chatStore.inputMessage = text;
     setTimeout(() => {
-      const input = document.querySelector(
-        ".message-input"
-      ) as HTMLInputElement;
+      const input = document.querySelector(".message-input") as HTMLInputElement;
       input?.focus();
     }, 0);
   }
@@ -51,34 +49,37 @@
   }
 </script>
 
-<div class="relative w-screen h-screen overflow-hidden" style="height: 100dvh;">
-  <!-- Gradient Mesh Background -->
-  <div
-    class="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100/50 to-white"
-  ></div>
-
-  <!-- Rectangle.png pattern overlay -->
-  <div class="absolute inset-0 pointer-events-none opacity-80">
-    <img src="/Rectangle.png" alt="" class="w-full h-full object-center" />
-  </div>
-
-  <!-- Main Content with fade-in animation -->
+<!-- Page background -->
+<div class="page-bg">
+  <!-- Widget container -->
   {#if mounted}
-    <div class="relative z-10 flex flex-col h-full" in:fade={{ duration: 400 }}>
+    <div class="widget-shell" in:fade={{ duration: 350 }}>
+      <!-- Header -->
       <ChatHeader onNewChat={() => chatStore.startNewConversation()} />
 
-      <div class="flex-1 overflow-hidden min-h-0">
+      <!-- Error toast -->
+      {#if chatStore.error}
         <div
-          class="h-full overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 scroll-smooth scrollbar-thin scrollbar-thumb-slate-300/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-400/60"
-          bind:this={messagesContainer}
+          class="error-toast"
+          in:fly={{ y: -16, duration: 250 }}
+          out:fly={{ y: -16, duration: 200 }}
         >
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+            <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z" fill="#ef4444"/>
+          </svg>
+          <span>{chatStore.error}</span>
+        </div>
+      {/if}
+
+      <!-- Messages area -->
+      <div class="messages-area" bind:this={messagesContainer}>
+        <div class="chat-container">
           {#if chatStore.messages.length === 0}
             <WelcomeScreen onSuggestionClick={setSuggestion} />
           {:else}
-            <div class="flex flex-col gap-4 sm:gap-6 max-w-6xl mx-auto">
-              {#each chatStore.messages as message, i (message.id)}
+            <div class="messages-list">
+              {#each chatStore.messages as message (message.id)}
                 {#if message.sender === "user"}
-                  <!-- User messages appear instantly -->
                   <div>
                     <MessageBubble
                       sender={message.sender}
@@ -88,8 +89,7 @@
                     />
                   </div>
                 {:else}
-                  <!-- AI messages have smooth animation -->
-                  <div in:fly={{ y: 10, duration: 400, easing: cubicOut }}>
+                  <div in:fly={{ y: 8, duration: 320, easing: cubicOut }}>
                     <MessageBubble
                       sender={message.sender}
                       text={message.text}
@@ -101,7 +101,7 @@
               {/each}
 
               {#if chatStore.isLoading}
-                <div in:fly={{ y: 10, duration: 400, easing: cubicOut }}>
+                <div in:fly={{ y: 8, duration: 280, easing: cubicOut }}>
                   <TypingIndicator />
                 </div>
               {/if}
@@ -110,34 +110,7 @@
         </div>
       </div>
 
-      {#if chatStore.error}
-        <div
-          class="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 w-[90%] sm:w-auto max-w-md"
-          in:fly={{ y: -20, duration: 300 }}
-        >
-          <div
-            class="glass flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 20 20"
-              fill="none"
-              class="text-red-500 flex-shrink-0 sm:w-5 sm:h-5"
-            >
-              <path
-                d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM11 15H9V13H11V15ZM11 11H9V5H11V11Z"
-                fill="currentColor"
-              />
-            </svg>
-            <span
-              class="text-xs sm:text-sm font-medium text-red-600 line-clamp-2"
-              >{chatStore.error}</span
-            >
-          </div>
-        </div>
-      {/if}
-
+      <!-- Input -->
       <ChatInput
         bind:value={chatStore.inputMessage}
         onSend={() => chatStore.sendMessage()}
@@ -149,21 +122,98 @@
 </div>
 
 <style>
-  /* Custom scrollbar */
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
+  /* Page background */
+  .page-bg {
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.22), transparent 30%),
+      radial-gradient(circle at top right, rgba(14, 165, 233, 0.16), transparent 24%),
+      linear-gradient(180deg, #eef4ff 0%, #f7f9fc 26%, #eef2f7 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
   }
 
-  .scrollbar-track-transparent::-webkit-scrollbar-track {
+  /* Full screen app shell */
+  .widget-shell {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.18)),
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+    border-radius: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: none;
+  }
+
+  /* Scrollable messages */
+  .messages-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: transparent;
+    scroll-behavior: smooth;
+
+    /* Thin scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+  }
+
+  .chat-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  .messages-area::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .messages-area::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .scrollbar-thumb-slate-300\/50::-webkit-scrollbar-thumb {
-    background: rgba(203, 213, 225, 0.5);
-    border-radius: 3px;
+  .messages-area::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 2px;
   }
 
-  .scrollbar-thumb-slate-300\/50::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.6);
+  .messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0 140px; /* Large bottom padding so messages scroll past the floating input */
+    min-height: 100%;
+  }
+
+  /* Error toast */
+  .error-toast {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    background: #fff;
+    border: 1px solid #fee2e2;
+    border-radius: 10px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+    color: #ef4444;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

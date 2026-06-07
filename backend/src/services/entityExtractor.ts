@@ -24,18 +24,23 @@ export async function extractEntities(message: string): Promise<ExtractedEntitie
         const result = await streamObject({
             model: google('gemini-2.5-flash-lite'), 
             schema: extractedEntitiesSchema,
-            prompt: `Extract any relevant customer service entities from this message. Only extract if explicitly mentioned.
+            prompt: `You are extracting structured customer support metadata.
 
-Message: "${message}"
+Rules:
+- Only return values that are explicitly present in the message
+- Do not guess, normalize, or invent values
+- Preserve the user's original wording where possible
+- Return an empty object if nothing relevant is mentioned
 
-Extract:
-- Order numbers (formats: #12345, ORD-123, order 12345, etc.)
-- Tracking numbers (formats: 1Z999AA10123456784, tracking #123, etc.)
-- Package IDs
-- Email addresses
-- Product names
+Message:
+"${message}"
 
-If nothing is found, return empty object. Be precise - only extract if clearly stated.`,
+Extract these fields when present:
+- orderNumber
+- trackingNumber
+- packageId
+- customerEmail
+- productName`,
         });
 
         // Collect the streamed object

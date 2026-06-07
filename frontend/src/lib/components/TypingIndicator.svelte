@@ -1,48 +1,69 @@
-<div
-  class="animate-slide-up flex gap-2 sm:gap-3 items-start max-w-[95%] sm:max-w-3xl"
->
-  <div
-    class="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg"
-  >
+<div class="typing-row">
+  <div class="ai-avatar">
     <img
-      src="/robot.png"
-      alt="AI"
-      class="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+      src="https://cdn.spurnow.com/360/7799_spurlogobluebg.svg"
+      alt="Spur"
+      class="avatar-img"
     />
   </div>
-  <div
-    class="glass px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-3xl rounded-tl-md shadow-glass"
-  >
-    <div class="flex gap-1.5 items-center h-5 sm:h-6">
-      <span
-        class="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-brand-500 rounded-full animate-wave"
-        style="animation-delay: 0ms"
-      ></span>
-      <span
-        class="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-brand-500 rounded-full animate-wave"
-        style="animation-delay: 150ms"
-      ></span>
-      <span
-        class="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-brand-500 rounded-full animate-wave"
-        style="animation-delay: 300ms"
-      ></span>
-    </div>
+  <div class="typing-bubble">
+    <span class="dot" style="animation-delay: 0ms"></span>
+    <span class="dot" style="animation-delay: 160ms"></span>
+    <span class="dot" style="animation-delay: 320ms"></span>
   </div>
 </div>
 
 <style>
-  @keyframes wave {
-    0%,
-    60%,
-    100% {
-      transform: translateY(0);
-    }
-    30% {
-      transform: translateY(-8px);
-    }
+  .typing-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
   }
 
-  .animate-wave {
-    animation: wave 1.4s ease-in-out infinite;
+  .ai-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+  }
+
+  .avatar-img {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .typing-bubble {
+    background: #ffffff;
+    border-radius: 18px 18px 18px 4px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    background: #94a3b8;
+    border-radius: 50%;
+    display: block;
+    animation: bounce 1.4s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 60%, 100% {
+      transform: translateY(0);
+      background: #cbd5e1;
+    }
+    30% {
+      transform: translateY(-6px);
+      background: #2563eb;
+    }
   }
 </style>

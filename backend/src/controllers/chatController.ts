@@ -41,26 +41,23 @@ export async function sendMessage(req: Request, res: Response) {
     // Save user message
     await saveMessage(conversationId, 'user', message.trim());
 
-    // Extract entities from user message (async, don't block)
+    // Extract entities before generating the reply so the current turn can use them.
     console.log(`🔎 Starting entity extraction for message: "${message.trim()}"`);
-    extractEntities(message.trim()).then(async (entities) => {
+    try {
+        const entities = await extractEntities(message.trim());
         console.log(`📦 Raw extracted entities:`, JSON.stringify(entities, null, 2));
         if (hasEntities(entities)) {
             console.log(`🔍 Extracted entities:`, entities);
-            try {
-                await updateConversationMetadata(conversationId, entities);
-                console.log(`✅ Metadata updated successfully`);
-            } catch (err) {
-                console.error('❌ Failed to update metadata:', err);
-            }
+            await updateConversationMetadata(conversationId, entities);
+            console.log(`✅ Metadata updated successfully`);
         } else {
             console.log(`⚠️  No entities found in message`);
         }
-    }).catch((err: Error) => {
+    } catch (err) {
         console.error('Entity extraction failed:', err);
-    });
+    }
 
-    // Get current metadata for context
+    // Get current metadata for context after extraction
     const metadata = await getConversationMetadata(conversationId);
 
     // Generate AI response
@@ -70,9 +67,15 @@ export async function sendMessage(req: Request, res: Response) {
             aiReply += chunk;
         }
     } catch (error) {
-        console.error('Error generating AI response:', error);
+        console.error('❌ Error generating AI response:', error instanceof Error ? error.message : String(error));
+        if (error instanceof Error && error.cause) {
+            console.error('   Cause:', error.cause);
+        }
+        if (error instanceof Error && error.stack) {
+            console.error('   Stack:', error.stack.split('\n').slice(0,3).join('\n'));
+        }
         // Still save an error message to maintain conversation flow
-        aiReply = "I apologize, but I'm having technical difficulties. Please try again or contact support@shopease.com.";
+        aiReply = "I apologize, but I'm having technical difficulties. Please try again or contact support@spurr.com.";
     }
 
     // Save AI response

@@ -1,6 +1,10 @@
-# AI Live Chat Agent - Assignment Submission
+# Ask-Spurr — AI Live Chat Agent
 
-This repository contains the source code for the AI Live Chat Support Agent.
+A production-quality AI-powered customer support chat agent built for the Spur founding engineer take-home assignment.
+
+**Live Demo:** _(deploy URL here)_
+
+---
 
 ## 🚀 How to Run Locally
 
@@ -8,38 +12,37 @@ This repository contains the source code for the AI Live Chat Support Agent.
 
 - Node.js (v18+)
 - PostgreSQL (running locally or via a provider like Neon)
-- Google AI Studio API Key
+- Google AI Studio API Key ([get one free here](https://aistudio.google.com/))
 
-### Step 1: Backend Setup
-
-Open a terminal in the `backend` directory:
+### Step 1: Clone & Setup Backend
 
 ```bash
 cd backend
 
-# 1. Install dependencies
+# Install dependencies
 npm install
 
-# 2. Configure Environment Variables
+# Configure environment variables
 cp .env.example .env
 ```
 
-Edit the `.env` file with your credentials:
+Edit `.env` with your credentials:
 
-- `DATABASE_URL`: Your PostgreSQL connection string.
-- `GOOGLE_GENERATIVE_AI_API_KEY`: Your Gemini API key.
-- `FRONTEND_URL`: `http://localhost:5173` (default)
+```env
+DATABASE_URL="postgresql://user:password@host:5432/dbname"
+GOOGLE_GENERATIVE_AI_API_KEY="your-gemini-api-key"
+FRONTEND_URL="http://localhost:5173"
+PORT=3000
+```
 
 ### Step 2: Database Setup
 
-Initialize the database schema using Prisma:
-
 ```bash
-# Apply migrations to creating tables (Conversation, Message)
+# Apply migrations to create tables (Conversation, Message, ConversationMetadata)
 npx prisma migrate deploy
-
-# (No seeding required - the app starts fresh)
 ```
+
+> No seeding needed — the app starts fresh automatically.
 
 ### Step 3: Run Backend
 
@@ -48,45 +51,74 @@ npm run dev
 # Server starts on http://localhost:3000
 ```
 
-### Step 4: Frontend Setup
+### Step 4: Setup & Run Frontend
 
 Open a **new terminal** in the `frontend` directory:
 
 ```bash
 cd frontend
 
-# 1. Install dependencies
+# Install dependencies
 npm install
 
-# 2. Run Frontend
+# Run frontend
 npm run dev
 # App starts on http://localhost:5173
 ```
 
-Open `http://localhost:5173` in your browser to test the application.
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
 ## 🏗️ Architecture Overview
 
-The project follows a **Layered Architecture** to separate concerns and ensure maintainability.
+The project follows a **Layered Architecture** for clean separation of concerns.
 
-### Backend Structure (`backend/src`)
+```
+spurr/
+├── backend/
+│   └── src/
+│       ├── routes/         → API route definitions (/chat/*, /health)
+│       ├── controllers/    → HTTP request/response + input validation
+│       ├── middleware/      → Global error handler, Zod validation, asyncHandler wrapper
+│       ├── services/
+│       │   ├── chatService.ts       → Conversation DB operations
+│       │   ├── llmService.ts        → Gemini AI call, prompt building, model fallback
+│       │   ├── faqService.ts        → Static knowledge base (FAQ context)
+│       │   ├── entityExtractor.ts   → Extracts order/tracking numbers from messages
+│       │   └── metadataService.ts   → Persists extracted entities to DB
+│       └── index.ts        → Express app, CORS, process-level safety nets
+│
+└── frontend/
+    └── src/
+        ├── routes/+page.svelte       → Main page layout
+        ├── lib/
+        │   ├── stores/chatStore.svelte.ts  → All chat logic (API, state, offline sync)
+        │   └── components/
+        │       ├── ChatHeader.svelte
+        │       ├── ChatInput.svelte
+        │       ├── MessageBubble.svelte    → Renders markdown + rich order cards
+        │       ├── WelcomeScreen.svelte    → Landing screen with quick-action cards
+        │       └── TypingIndicator.svelte
+        └── lib/demo/agentSnapshot.ts  → Mock order data for the UI
+```
 
-- **`routes/`**: Defines API endpoints (`/chat/*`, `/health`).
-- **`controllers/`**: Handles HTTP request/response logic, input validation (Zod), and error formatting.
-- **`services/`**: Contains the core business logic.
-  - `chatService.ts`: Manages conversation history and database operations.
-  - `llmService.ts`: Encapsulates all Gemini AI interactions and prompt logic.
-  - `faqService.ts`: Provides the static knowledge base.
-- **`prisma/`**: Database schema definition.
+### Key Design Decisions
 
-### Design Decisions
+1. **Reactive Store (Frontend):** All business logic — API calls, offline sync, session management, heartbeat — lives in a single Svelte 5 reactive class (`chatStore.svelte.ts`). UI components are purely presentational.
 
-1.  **Reactive Store (Frontend)**: All frontend logic (offline sync, heartbeat, API calls) is centralized in a Svelte 5 Reactive Store (`chatStore.svelte.ts`). This keeps the UI components "dumb" and purely for rendering.
-2.  **Stateless API**: The backend is RESTful and uses the `sessionId` passed in each request to retrieve context, making the service easily scalable.
-3.  **Resilience First**: The system includes a custom "Heartbeat" mechanism with exponential backoff to handle server outages gracefully, and a "Batch Sync" system to recover context when coming back online.
-4.  **Mobile-First Responsive Design**: The UI is fully responsive with optimized layouts for mobile, tablet, and desktop - including compact headers, docked input areas on mobile, and horizontal card layouts for better touch interactions.
+2. **Stateless REST API:** The backend is fully stateless. Each request passes a `sessionId` and the server fetches history from the DB, making the service horizontally scalable.
+
+3. **Entity Extraction Layer:** Before generating a reply, the system runs a lightweight LLM call to extract structured data (order numbers, tracking numbers, emails) from the user's message. This is saved to `ConversationMetadata` so the AI can reference it contextually across the session — similar to how a real Spur support agent would remember what order a customer is asking about.
+
+4. **Generative UI (Order Cards):** The LLM is instructed to output a special token `[ORDER_CARD:ORDER_ID]` in its response. The frontend intercepts this token and renders a rich interactive UI card with the product image, order status, and summary — instead of plain text. This is the same pattern used by modern AI chat products.
+
+5. **Model Fallback Chain:** The backend tries a prioritized list of Gemini models in order. If any model hits a rate limit or error, it automatically falls back to the next one:
+   `gemini-2.5-flash-lite` → `gemini-2.5-flash` → `gemini-2.0-flash-exp` → `gemini-1.5-flash`
+
+6. **Resilience & Offline Recovery:** The frontend implements a Heartbeat mechanism with exponential backoff to detect when the backend recovers. Unsent messages are queued and synced automatically when connectivity restores.
+
+7. **Process-level Safety Nets:** `process.on('uncaughtException')` and `process.on('unhandledRejection')` are registered to prevent the Node.js process from crashing on unexpected errors. JSON body size is capped at 50kb to prevent payload attacks.
 
 ---
 
@@ -94,31 +126,44 @@ The project follows a **Layered Architecture** to separate concerns and ensure m
 
 ### Provider
 
-**Google Gemini 2.0 Flash (Experimental)**
+**Google Gemini** (via Vercel AI SDK + `@ai-sdk/google`)
 
-- Selected for its speed and superior reasoning capabilities compared to smaller models.
-- Accessed via the `Google Generative AI SDK`.
+- Selected for its speed, strong reasoning, and generous free tier.
+- Falls back through 4 models automatically on failure or rate limit.
+- If every model fails, a friendly human-readable error is always returned to the user — never a blank response.
 
 ### Prompting Strategy
 
-I used a focused **System Prompt** that enforces a specific persona and constraints:
+A focused **System Prompt** with four layers:
 
-1.  **Role Definition**: "Helpful support agent for ShopEase".
-2.  **Knowledge Injection**: Hardcoded FAQ text (Shipping, Returns, Support hours) is injected directly into the system prompt.
-3.  **Context Window**: The last 5 messages of the conversation are appended to every request to ensure continuity without exceeding token limits.
+1. **Role Definition:** Calm, concise Spurr support representative tone.
+2. **Behavior Rules:** Only answer from the knowledge base. Never invent policies. Offer human handoff when outside scope.
+3. **Knowledge Injection:** FAQ context (Shipping, Returns, Support Hours, Payments, Promotions, etc.) is injected directly into every system prompt.
+4. **Customer Context:** Extracted metadata (order numbers, tracking numbers, etc.) is appended to personalize responses within the session.
+
+### Cost Control
+
+- Only the **last 5 messages** of history are sent per request. 
+- Responses are kept short (1–4 sentences) via the system prompt.
 
 ---
 
-## ⚖️ Trade-offs & "If I had more time..."
+## ⚖️ Trade-offs & "If I Had More Time..."
 
-### Trade-offs
+### Trade-offs Made
 
-1.  **Hardcoded FAQ**: For this assignment, the knowledge base is a static string. In a real production app, this would be retrieved from a Vector Database (RAG) to scale to thousands of documents.
-2.  **No Authentication**: To focus on the core chat mechanics, I used `localStorage` to generate and persist a random Session ID. Production would require JWT/OAuth.
-3.  **Polling vs Sockets**: I implemented a robust polling mechanism (Heartbeat) for reconnection. For a chat app at scale, WebSockets or Server-Sent Events (SSE) would be more efficient for real-time updates.
+| Decision | Reason |
+|---|---|
+| **No streaming responses** | For support chat, responses are short (1–4 sentences). Full streaming would add significant frontend complexity (SSE, partial state, cursor animation) for minimal UX gain. The Typing Indicator gives a great perceived-performance feel instead. |
+| **Hardcoded FAQ** | Static string in `faqService.ts`. In production this would be a Vector DB (RAG) to scale to thousands of articles. |
+| **No authentication** | `localStorage` session ID is sufficient for the assignment scope. Production would use JWT/OAuth. |
+| **REST over WebSockets** | REST is simpler to deploy and reason about. A heartbeat + exponential backoff handles the reconnection case cleanly without WebSocket complexity. |
+| **Mock order data on frontend** | The `agentSnapshot.ts` demo orders are frontend-only for the Generative UI cards. In production, the backend would fetch real orders from a Shopify/DB integration. |
 
-### "If I had more time..."
+### If I Had More Time and if you would have asked...
 
-1.  **Streaming Responses**: Implement Vercel AI SDK's streaming on the frontend to show the AI typing character-by-character.
-2.  **Unit Tests**: Add Jest/Vitest tests for the `ChatStore` logic (specifically the offline queue and retry mechanisms).
-3.  **Admin Dashboard**: A simple page to view all active conversations stored in the database.
+1. **Token streaming:** Hook up SSE streaming from the Vercel AI SDK to the frontend so users see the AI typing word-by-word — especially useful for longer responses.
+2. **Unit & integration tests:** Vitest tests for `chatStore` (offline queue, retry logic) and backend service tests for the entity extractor and LLM service.
+3. **Vector search / RAG:** Replace the static FAQ string with embeddings + Postgres `pgvector` so the agent can search thousands of knowledge base articles dynamically.
+4. **Past Chat Screen:** A simple sideview to view all active conversations, and full message history and continue the conversations.
+5. **Multi-tenant sessions:** Proper user auth + per-user session isolation for a real multi-customer deployment.

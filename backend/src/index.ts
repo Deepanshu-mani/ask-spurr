@@ -1,10 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import chatRoutes from './routes/chatRoutes.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,8 +29,9 @@ app.use(cors({
     },
     credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Limit body size to prevent payload attacks / crashes
+app.use(express.json({ limit: '50kb' }));
+app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -52,13 +52,8 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-// Global error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error('Unhandled error:', err);
-    res.status(500).json({
-        error: 'An unexpected error occurred. Please try again later.',
-    });
-});
+// Global error handler (knows about AppError status codes)
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
@@ -74,4 +69,13 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
     console.log('SIGINT received, shutting down gracefully...');
     process.exit(0);
+});
+
+// Safety nets – prevent the process crashing on unexpected async errors
+process.on('uncaughtException', (err) => {
+    console.error('⚠️  Uncaught Exception (server kept alive):', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('⚠️  Unhandled Promise Rejection (server kept alive):', reason);
 });

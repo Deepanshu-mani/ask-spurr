@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { scale } from "svelte/transition";
+  import { scale, fly } from "svelte/transition";
 
   export let onSuggestionClick: (text: string) => void;
 
@@ -22,82 +22,158 @@
       subtitle: "When we're available to help",
       query: "What are your support hours?",
     },
+    {
+      emoji: "🛍️",
+      title: "My Orders",
+      subtitle: "View active orders and tracking",
+      query: "Show me my active orders and their statuses.",
+    },
   ];
 </script>
 
-<div
-  class="flex flex-col items-center justify-start text-center px-3 sm:px-4 lg:px-8 pt-4 sm:pt-8 lg:pt-12 pb-2 max-w-6xl mx-auto"
->
-  <div
-    class="text-3xl sm:text-5xl lg:text-7xl mb-2 sm:mb-4 lg:mb-6 animate-bounce-slow"
-    style="animation-duration: 3s;"
-  >
-    👋
+<div class="welcome-wrap">
+  <div class="welcome-hero" in:fly={{ y: -10, duration: 400, delay: 100 }}>
+    <h1 class="welcome-title">Welcome to Ask-Spurr!</h1>
+    <p class="welcome-sub">How can we help you today?</p>
   </div>
-  <h2
-    class="text-lg sm:text-3xl lg:text-5xl font-bold text-slate-900 mb-1 sm:mb-2 lg:mb-3 tracking-tight bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent"
-  >
-    Welcome to Ask AI!
-  </h2>
-  <p
-    class="text-xs sm:text-sm lg:text-lg text-slate-600 mb-4 sm:mb-8 lg:mb-16 max-w-md"
-  >
-    How can we help you today?
-  </p>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-3 lg:gap-6 w-full">
+  <div class="cards-grid">
     {#each cards as card, i}
       <button
-        class="glass group relative overflow-hidden p-3 sm:p-5 lg:p-8 rounded-xl sm:rounded-2xl lg:rounded-3xl transition-all duration-300 hover:scale-[1.02] sm:hover:scale-105 hover:shadow-glass-hover text-left"
+        class="suggestion-card"
         onclick={() => onSuggestionClick(card.query)}
-        in:scale={{ duration: 300, delay: i * 100, start: 0.9 }}
+        in:scale={{ duration: 280, delay: 200 + i * 80, start: 0.9 }}
       >
-        <!-- Hover glow effect -->
-        <div
-          class="absolute inset-0 bg-gradient-to-r from-brand-500/0 via-brand-400/5 to-cyan-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        ></div>
-
-        <div class="relative z-10 flex items-center gap-3 sm:block">
-          <div
-            class="text-2xl sm:text-3xl lg:text-4xl sm:mb-3 lg:mb-4 transition-transform duration-300 group-hover:scale-110 flex-shrink-0"
-          >
-            {card.emoji}
-          </div>
-          <div>
-            <h3
-              class="text-sm sm:text-base lg:text-xl font-semibold text-slate-900 sm:mb-1 lg:mb-2"
-            >
-              {card.title}
-            </h3>
-            <p
-              class="text-[10px] sm:text-xs lg:text-sm text-slate-600 hidden sm:block"
-            >
-              {card.subtitle}
-            </p>
-          </div>
+        <span class="card-emoji">{card.emoji}</span>
+        <div class="card-text">
+          <span class="card-title">{card.title}</span>
+          <span class="card-sub">{card.subtitle}</span>
         </div>
-
-        <!-- Subtle border glow -->
-        <div
-          class="absolute inset-0 rounded-xl sm:rounded-2xl lg:rounded-3xl border border-brand-300/0 group-hover:border-brand-300/50 transition-colors duration-300"
-        ></div>
       </button>
     {/each}
   </div>
 </div>
 
 <style>
-  @keyframes bounce-slow {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
+  .welcome-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 20px;
+    width: 100%;
+    margin: 0 auto;
+    gap: 40px;
   }
 
-  .animate-bounce-slow {
-    animation: bounce-slow 3s ease-in-out infinite;
+  .welcome-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .welcome-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #2563eb;
+    margin: 0;
+    letter-spacing: -0.03em;
+  }
+
+  .welcome-sub {
+    font-size: 1rem;
+    color: #475569;
+    margin: 0;
+  }
+
+  .cards-grid {
+    display: grid;
+    /* Force exactly 2 columns to create a 2x2 layout */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .suggestion-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    background: #f4f8fc;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 24px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  }
+
+  .suggestion-card:hover {
+    border-color: rgba(37, 99, 235, 0.2);
+    background: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+  }
+
+  .suggestion-card:active {
+    transform: scale(0.98);
+  }
+
+  .card-emoji {
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+
+  .card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .card-sub {
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+
+  @media (max-width: 600px) {
+    .welcome-wrap {
+      padding: 30px 16px 20px;
+      gap: 24px;
+    }
+
+    .welcome-title {
+      font-size: 1.75rem;
+    }
+
+    .cards-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .suggestion-card {
+      padding: 16px 12px;
+      gap: 10px;
+    }
+
+    .card-emoji {
+      font-size: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+    }
+
+    .card-sub {
+      font-size: 0.75rem;
+    }
   }
 </style>

@@ -180,7 +180,8 @@ class ChatStore {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to send message");
+                const detailMsg = errorData.details?.[0]?.message;
+                throw new Error(detailMsg || errorData.error || "Failed to send message");
             }
 
             const data = await response.json();
@@ -259,7 +260,11 @@ class ChatStore {
                 }),
             });
 
-            if (!response.ok) throw new Error("Failed to sync");
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const detailMsg = errorData.details?.[0]?.message;
+                throw new Error(detailMsg || errorData.error || "Failed to sync");
+            }
 
             const data = await response.json();
 
