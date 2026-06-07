@@ -17,7 +17,7 @@ export interface ConversationMetadata {
  * Get conversation metadata
  */
 export async function getConversationMetadata(
-    conversationId: string,
+    conversationId: string
 ): Promise<ConversationMetadata | null> {
     return await prisma.conversationMetadata.findUnique({
         where: { conversationId },
@@ -30,7 +30,7 @@ export async function getConversationMetadata(
  */
 export async function updateConversationMetadata(
     conversationId: string,
-    entities: ExtractedEntities,
+    entities: ExtractedEntities
 ): Promise<ConversationMetadata> {
     // Get existing metadata
     const existing = await getConversationMetadata(conversationId);
@@ -59,9 +59,11 @@ export async function updateConversationMetadata(
  * Delete conversation metadata
  */
 export async function deleteConversationMetadata(conversationId: string): Promise<void> {
-    await prisma.conversationMetadata.delete({
-        where: { conversationId },
-    }).catch(() => {
-        // Ignore if doesn't exist
-    });
+    await prisma.conversationMetadata
+        .delete({
+            where: { conversationId },
+        })
+        .catch(() => {
+            // Ignore if doesn't exist
+        });
 }

@@ -83,7 +83,7 @@ ${mockOrdersContext}`;
 export async function* streamChatResponse(
     userMessage: string,
     conversationHistory: ConversationMessage[] = [],
-    metadata?: ConversationMetadata | null,
+    metadata?: ConversationMetadata | null
 ) {
     let lastError: Error | null = null;
 
@@ -100,7 +100,8 @@ export async function* streamChatResponse(
         if (metadata) {
             const details: string[] = [];
             if (metadata.orderNumber) details.push(`Order Number: ${metadata.orderNumber}`);
-            if (metadata.trackingNumber) details.push(`Tracking Number: ${metadata.trackingNumber}`);
+            if (metadata.trackingNumber)
+                details.push(`Tracking Number: ${metadata.trackingNumber}`);
             if (metadata.packageId) details.push(`Package ID: ${metadata.packageId}`);
             if (metadata.customerEmail) details.push(`Email: ${metadata.customerEmail}`);
             if (metadata.productName) details.push(`Product: ${metadata.productName}`);
@@ -195,7 +196,11 @@ export async function* streamChatResponse(
         if (lastError && lastError.message) {
             const errorMsg = lastError.message.toLowerCase();
 
-            if (errorMsg.includes('quota') || errorMsg.includes('rate limit') || errorMsg.includes('resource_exhausted')) {
+            if (
+                errorMsg.includes('quota') ||
+                errorMsg.includes('rate limit') ||
+                errorMsg.includes('resource_exhausted')
+            ) {
                 yield "I'm experiencing high demand right now due to API rate limits. Please try again in a few moments, or I can connect you with a human agent for immediate assistance.";
             } else if (errorMsg.includes('api key') || errorMsg.includes('authentication')) {
                 yield 'I apologize, but there seems to be a configuration issue with my AI service. Please contact our technical support at support@spurr.com.';

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { marked } from "marked";
-  import type { Message } from "$lib/types";
-  import { demoOrders } from "$lib/demo/agentSnapshot";
+  import { marked } from 'marked';
+  import type { Message } from '$lib/types';
+  import { demoOrders } from '$lib/demo/agentSnapshot';
 
-  export let sender: Message["sender"];
+  export let sender: Message['sender'];
   export let text: string;
-  export let status: Message["status"] = "sent";
+  export let status: Message['status'] = 'sent';
   export let onRetry: () => void = () => {};
 
   marked.setOptions({
@@ -15,7 +15,7 @@
 
   function formatTime(date?: string) {
     const d = date ? new Date(date) : new Date();
-    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true });
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
   }
 
   // Parse text into segments: text or order_card
@@ -24,20 +24,24 @@
     if (match) {
       const orderId = match[1];
       const order = demoOrders.find((o) => o.id === orderId);
-      return { type: "order", id: orderId, order };
+      return { type: 'order', id: orderId, order };
     }
-    return { type: "text", content: part };
+    return { type: 'text', content: part };
   });
 
   function statusTone(status: string) {
-    if (status === "Delivered") return "delivered";
-    if (status === "Out for Delivery") return "out";
-    return "moving";
+    if (status === 'Delivered') return 'delivered';
+    if (status === 'Out for Delivery') return 'out';
+    return 'moving';
   }
 </script>
 
-<div class="msg-row {sender === 'user' ? 'msg-user' : 'msg-ai'} {status === 'sending' ? 'msg-sending' : ''}">
-  {#if sender === "ai"}
+<div
+  class="msg-row {sender === 'user' ? 'msg-user' : 'msg-ai'} {status === 'sending'
+    ? 'msg-sending'
+    : ''}"
+>
+  {#if sender === 'ai'}
     <div class="ai-avatar">
       <img
         src="https://cdn.spurnow.com/360/7799_spurlogobluebg.svg"
@@ -48,11 +52,11 @@
     <div class="ai-bubble-wrap">
       <div class="ai-bubble">
         {#each segments as segment}
-          {#if segment.type === "text" && segment.content.trim()}
+          {#if segment.type === 'text' && segment.content.trim()}
             <div class="markdown-content">
               {@html marked.parse(segment.content)}
             </div>
-          {:else if segment.type === "order" && segment.order}
+          {:else if segment.type === 'order' && segment.order}
             <div class="rich-order-card">
               <div class="order-top">
                 <div class="order-meta">
@@ -65,7 +69,15 @@
                 <div class="order-details">
                   <div class="status-wrap">
                     <span class="status-text">{segment.order.status}</span>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12L10 8L6 4" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                      ><path
+                        d="M6 12L10 8L6 4"
+                        stroke="#9ca3af"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      /></svg
+                    >
                   </div>
                   <p class="order-summary">{segment.order.summary}</p>
                 </div>
@@ -78,9 +90,19 @@
     </div>
   {:else}
     <div class="user-bubble-wrap">
-      {#if status === "error"}
+      {#if status === 'error'}
         <button onclick={onRetry} class="retry-btn" title="Retry">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <path d="M21.5 2v6h-6"></path>
             <path d="M2.5 22v-6h6"></path>
             <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8"></path>
@@ -92,7 +114,7 @@
         {text}
       </div>
       <span class="msg-time user-time">
-        {#if status === "error"}
+        {#if status === 'error'}
           <span class="error-label">Failed ·</span>
         {/if}
         {formatTime()}
@@ -184,7 +206,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s;
   }
 
@@ -310,7 +332,7 @@
     color: inherit;
     padding: 0;
     font-size: inherit;
-    font-family: "SF Mono", Monaco, monospace;
+    font-family: 'SF Mono', Monaco, monospace;
   }
 
   :global(.markdown-content table) {
@@ -346,7 +368,7 @@
     padding: 0.1rem 0.35rem;
     border-radius: 0.3rem;
     font-size: 0.875em;
-    font-family: "SF Mono", Monaco, monospace;
+    font-family: 'SF Mono', Monaco, monospace;
   }
 
   :global(.markdown-content a) {

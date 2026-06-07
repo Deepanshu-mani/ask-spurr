@@ -1,4 +1,4 @@
-type ShippingStatus = "Packed" | "In Transit" | "Out for Delivery" | "Delivered";
+type ShippingStatus = 'Packed' | 'In Transit' | 'Out for Delivery' | 'Delivered';
 
 export interface DemoTimelineItem {
   label: string;
@@ -72,84 +72,81 @@ function createAvatar(initials: string, accent: string): string {
   return createSvgDataUri(svg);
 }
 
-const jacketImage =
-  "https://unsplash.com/photos/SHJXAe_G7O8/download?force=true";
-const sneakersImage =
-  "https://unsplash.com/photos/jVerIoX3y7c/download?force=true";
-const headphonesImage =
-  "https://unsplash.com/photos/rlJngr1ReOw/download?force=true";
+const jacketImage = 'https://unsplash.com/photos/SHJXAe_G7O8/download?force=true';
+const sneakersImage = 'https://unsplash.com/photos/jVerIoX3y7c/download?force=true';
+const headphonesImage = 'https://unsplash.com/photos/rlJngr1ReOw/download?force=true';
 
 export const demoCustomerProfile: DemoCustomerProfile = {
-  name: "Ariana Stone",
-  email: "ariana.stone@example.com",
-  tier: "Gold Member",
-  location: "Austin, TX",
-  avatar: createAvatar("AS", "#2563eb"),
-  note: "Customer opened 3 support chats this month, mostly about shipping and exchange updates.",
+  name: 'Ariana Stone',
+  email: 'ariana.stone@example.com',
+  tier: 'Gold Member',
+  location: 'Austin, TX',
+  avatar: createAvatar('AS', '#2563eb'),
+  note: 'Customer opened 3 support chats this month, mostly about shipping and exchange updates.',
 };
 
 export const demoOrders: DemoOrder[] = [
   {
-    id: "SE-48219",
-    orderDate: "June 5, 2026",
-    product: "Nimbus Trail Jacket",
-    price: "$128.00",
-    status: "Out for Delivery",
-    summary: "Your order is on its way and should arrive today.",
-    carrier: "UPS Ground",
-    tracking: "1Z9A4X23-1849-UPS",
-    eta: "Today, 6:00 PM",
-    lastUpdate: "Arrived at Austin distribution center at 8:14 AM",
+    id: 'SE-48219',
+    orderDate: 'June 5, 2026',
+    product: 'Nimbus Trail Jacket',
+    price: '$128.00',
+    status: 'Out for Delivery',
+    summary: 'Your order is on its way and should arrive today.',
+    carrier: 'UPS Ground',
+    tracking: '1Z9A4X23-1849-UPS',
+    eta: 'Today, 6:00 PM',
+    lastUpdate: 'Arrived at Austin distribution center at 8:14 AM',
     progress: 86,
-    accent: "#2563eb",
+    accent: '#2563eb',
     thumbnail: jacketImage,
     timeline: [
-      { label: "Packed at warehouse", time: "Jun 4, 6:40 PM", done: true },
-      { label: "Picked up by UPS", time: "Jun 5, 9:10 AM", done: true },
-      { label: "Sorted at regional hub", time: "Jun 6, 1:22 PM", done: true },
-      { label: "Out for delivery", time: "Today, 8:14 AM", done: true },
+      { label: 'Packed at warehouse', time: 'Jun 4, 6:40 PM', done: true },
+      { label: 'Picked up by UPS', time: 'Jun 5, 9:10 AM', done: true },
+      { label: 'Sorted at regional hub', time: 'Jun 6, 1:22 PM', done: true },
+      { label: 'Out for delivery', time: 'Today, 8:14 AM', done: true },
     ],
   },
   {
-    id: "SE-47102",
-    orderDate: "June 2, 2026",
-    product: "Cloudform Sneakers",
-    price: "$94.00",
-    status: "In Transit",
-    summary: "Your order is moving through the carrier network.",
-    carrier: "FedEx Home",
-    tracking: "FDX-5520-0094",
-    eta: "Tomorrow",
-    lastUpdate: "Departed Dallas sorting facility at 11:08 PM",
+    id: 'SE-47102',
+    orderDate: 'June 2, 2026',
+    product: 'Cloudform Sneakers',
+    price: '$94.00',
+    status: 'In Transit',
+    summary: 'Your order is moving through the carrier network.',
+    carrier: 'FedEx Home',
+    tracking: 'FDX-5520-0094',
+    eta: 'Tomorrow',
+    lastUpdate: 'Departed Dallas sorting facility at 11:08 PM',
     progress: 63,
-    accent: "#0f766e",
+    accent: '#0f766e',
     thumbnail: sneakersImage,
     timeline: [
-      { label: "Order confirmed", time: "Jun 3, 10:12 AM", done: true },
-      { label: "Package prepared", time: "Jun 4, 4:30 PM", done: true },
-      { label: "In transit", time: "Jun 6, 11:08 PM", done: true },
-      { label: "Estimated delivery", time: "Tomorrow", done: false },
+      { label: 'Order confirmed', time: 'Jun 3, 10:12 AM', done: true },
+      { label: 'Package prepared', time: 'Jun 4, 4:30 PM', done: true },
+      { label: 'In transit', time: 'Jun 6, 11:08 PM', done: true },
+      { label: 'Estimated delivery', time: 'Tomorrow', done: false },
     ],
   },
   {
-    id: "SE-46588",
-    orderDate: "May 23, 2026",
-    product: "Studio Noise Cancelling Headphones",
-    price: "$159.00",
-    status: "Delivered",
-    summary: "Your order was delivered yesterday with photo confirmation.",
-    carrier: "USPS Priority",
-    tracking: "9405 5036 9999 1234 5678 12",
-    eta: "Delivered yesterday",
-    lastUpdate: "Left at front door with photo confirmation",
+    id: 'SE-46588',
+    orderDate: 'May 23, 2026',
+    product: 'Studio Noise Cancelling Headphones',
+    price: '$159.00',
+    status: 'Delivered',
+    summary: 'Your order was delivered yesterday with photo confirmation.',
+    carrier: 'USPS Priority',
+    tracking: '9405 5036 9999 1234 5678 12',
+    eta: 'Delivered yesterday',
+    lastUpdate: 'Left at front door with photo confirmation',
     progress: 100,
-    accent: "#7c3aed",
+    accent: '#7c3aed',
     thumbnail: headphonesImage,
     timeline: [
-      { label: "Packed and labeled", time: "Jun 1, 2:16 PM", done: true },
-      { label: "Accepted by USPS", time: "Jun 2, 9:48 AM", done: true },
-      { label: "Delivered", time: "Yesterday, 3:22 PM", done: true },
-      { label: "Photo confirmation", time: "Yesterday, 3:24 PM", done: true },
+      { label: 'Packed and labeled', time: 'Jun 1, 2:16 PM', done: true },
+      { label: 'Accepted by USPS', time: 'Jun 2, 9:48 AM', done: true },
+      { label: 'Delivered', time: 'Yesterday, 3:22 PM', done: true },
+      { label: 'Photo confirmation', time: 'Yesterday, 3:24 PM', done: true },
     ],
   },
 ];

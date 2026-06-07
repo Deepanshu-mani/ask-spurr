@@ -22,7 +22,7 @@ export async function extractEntities(message: string): Promise<ExtractedEntitie
     try {
         // Use structured output to extract entities
         const result = await streamObject({
-            model: google('gemini-2.5-flash-lite'), 
+            model: google('gemini-2.5-flash-lite'),
             schema: extractedEntitiesSchema,
             prompt: `You are extracting structured customer support metadata.
 
@@ -61,5 +61,7 @@ Extract these fields when present:
  * Check if extracted entities contain any values
  */
 export function hasEntities(entities: ExtractedEntities): boolean {
-    return Object.values(entities).some(value => value !== undefined && value !== null && value !== '');
+    return Object.values(entities).some(
+        (value) => value !== undefined && value !== null && value !== ''
+    );
 }

@@ -1,7 +1,6 @@
 import { prisma } from './prisma.js';
 import type { ConversationMessage } from './llmService.js';
 
-
 /**
  * Create a new conversation
  */
@@ -31,11 +30,7 @@ export async function getConversation(conversationId: string) {
 /**
  * Save a message to the database
  */
-export async function saveMessage(
-    conversationId: string,
-    sender: 'user' | 'ai',
-    text: string,
-) {
+export async function saveMessage(conversationId: string, sender: 'user' | 'ai', text: string) {
     return await prisma.message.create({
         data: {
             id: crypto.randomUUID(),
@@ -50,7 +45,7 @@ export async function saveMessage(
  * Get conversation history formatted for LLM
  */
 export async function getConversationHistory(
-    conversationId: string,
+    conversationId: string
 ): Promise<ConversationMessage[]> {
     // Keep the model context intentionally small for cost and latency control.
     // We take from the end (descending) and then need to reverse them back to chronological order

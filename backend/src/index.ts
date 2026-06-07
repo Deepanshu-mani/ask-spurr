@@ -4,31 +4,32 @@ import cors from 'cors';
 import chatRoutes from './routes/chatRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 // Allow multiple origins for development and production
 const allowedOrigins = [
-    'http://localhost:5173',  // Local development
-    'http://localhost:3000',  // Alternative local port
+    'http://localhost:5173', // Local development
+    'http://localhost:3000', // Alternative local port
     process.env.FRONTEND_URL, // Production frontend URL from env
 ].filter(Boolean); // Remove undefined values
 
-app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl)
-        if (!origin) return callback(null, true);
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            // Allow requests with no origin (like mobile apps or curl)
+            if (!origin) return callback(null, true);
 
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-}));
+            if (allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
+        credentials: true,
+    })
+);
 // Limit body size to prevent payload attacks / crashes
 app.use(express.json({ limit: '50kb' }));
 app.use(express.urlencoded({ extended: true, limit: '50kb' }));
@@ -62,14 +63,17 @@ app.listen(PORT, () => {
     // Self-ping every 14 minutes to prevent Render free-tier from sleeping
     // (Render sleeps instances after 15 minutes of inactivity)
     const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-    setInterval(async () => {
-        try {
-            await fetch(`${SELF_URL}/health`);
-            console.log('🏓 Self-ping sent to keep server alive');
-        } catch {
-            // Ignore – server is still starting or network blip
-        }
-    }, 14 * 60 * 1000); // 14 minutes
+    setInterval(
+        async () => {
+            try {
+                await fetch(`${SELF_URL}/health`);
+                console.log('🏓 Self-ping sent to keep server alive');
+            } catch {
+                // Ignore – server is still starting or network blip
+            }
+        },
+        14 * 60 * 1000
+    ); // 14 minutes
 });
 
 // Graceful shutdown

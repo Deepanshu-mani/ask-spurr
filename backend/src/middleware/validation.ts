@@ -65,4 +65,3 @@ export function validateParams(paramName: string, schema: z.ZodSchema) {
         }
     };
 }
-

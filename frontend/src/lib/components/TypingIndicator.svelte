@@ -1,10 +1,6 @@
 <div class="typing-row">
   <div class="ai-avatar">
-    <img
-      src="https://cdn.spurnow.com/360/7799_spurlogobluebg.svg"
-      alt="Spur"
-      class="avatar-img"
-    />
+    <img src="https://cdn.spurnow.com/360/7799_spurlogobluebg.svg" alt="Spur" class="avatar-img" />
   </div>
   <div class="typing-bubble">
     <span class="dot" style="animation-delay: 0ms"></span>
@@ -57,7 +53,9 @@
   }
 
   @keyframes bounce {
-    0%, 60%, 100% {
+    0%,
+    60%,
+    100% {
       transform: translateY(0);
       background: #cbd5e1;
     }

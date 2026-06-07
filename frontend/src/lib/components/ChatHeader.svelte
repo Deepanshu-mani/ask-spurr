@@ -1,5 +1,6 @@
 <script lang="ts">
   export let onNewChat: () => void;
+  export let serviceStatus: 'checking' | 'online' | 'offline' = 'checking';
 </script>
 
 <div class="spur-header">
@@ -15,15 +16,32 @@
       <div class="header-title-group">
         <h1 class="header-title">Spur Support</h1>
         <div class="online-badge">
-          <span class="online-dot"></span>
-          <span class="online-text">Online · AI-powered</span>
+          <span class="status-dot {serviceStatus}"></span>
+          {#if serviceStatus === 'checking'}
+            <span class="online-text">Connecting...</span>
+          {:else if serviceStatus === 'online'}
+            <span class="online-text">Online · AI-powered</span>
+          {:else}
+            <span class="online-text offline-text">Service Offline · Reconnecting</span>
+          {/if}
         </div>
       </div>
     </div>
     <div class="header-actions">
       <button onclick={onNewChat} class="new-chat-btn" title="New Chat">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M8 1V15M1 8H15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M8 1V15M1 8H15"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+          />
         </svg>
         <span class="new-chat-label">New Chat</span>
       </button>
@@ -66,7 +84,7 @@
     flex-shrink: 0;
     overflow: hidden;
     border: 2px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
   .logo-img {
@@ -97,19 +115,63 @@
     gap: 5px;
   }
 
-  .online-dot {
+  .status-dot {
     width: 7px;
     height: 7px;
-    background: #4ade80;
     border-radius: 50%;
     flex-shrink: 0;
+    background: #94a3b8;
+  }
+
+  .status-dot.online {
+    background: #4ade80;
     box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
     animation: pulse-dot 2s ease-in-out infinite;
   }
 
+  .status-dot.offline {
+    background: #f87171;
+    box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.3);
+    animation: pulse-dot-red 1.5s ease-in-out infinite;
+  }
+
+  .status-dot.checking {
+    background: #fbbf24;
+    animation: pulse-dot-yellow 1s ease-in-out infinite;
+  }
+
   @keyframes pulse-dot {
-    0%, 100% { box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3); }
-    50% { box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.15); }
+    0%,
+    100% {
+      box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.15);
+    }
+  }
+
+  @keyframes pulse-dot-red {
+    0%,
+    100% {
+      box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.1);
+    }
+  }
+
+  @keyframes pulse-dot-yellow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  .offline-text {
+    color: rgba(255, 200, 200, 0.9);
   }
 
   .online-text {

@@ -27,14 +27,36 @@
       aria-label="Send message"
     >
       <!-- Paper plane icon matching Spur's actual UI -->
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M22 2L11 13"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M22 2L15 22L11 13L2 9L22 2Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
     </button>
   </div>
   <div class="powered-by">
-    <img src="https://cdn.spurnow.com/360/7799_spurlogobluebg.svg" alt="Spur" class="powered-logo" />
+    <img
+      src="https://cdn.spurnow.com/360/7799_spurlogobluebg.svg"
+      alt="Spur"
+      class="powered-logo"
+    />
     <span>Powered by spurnow.com</span>
   </div>
 </div>
@@ -45,7 +67,12 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    background: linear-gradient(180deg, rgba(245,247,250,0) 0%, rgba(245,247,250,0.7) 25%, rgba(245,247,250,0.95) 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(245, 247, 250, 0) 0%,
+      rgba(245, 247, 250, 0.7) 25%,
+      rgba(245, 247, 250, 0.95) 100%
+    );
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-top: none;
@@ -67,12 +94,16 @@
     padding: 8px 8px 8px 16px;
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
   .input-bar.focused {
     border-color: #3b7ef8;
-    box-shadow: 0 0 0 3px rgba(59, 126, 248, 0.15), 0 4px 24px rgba(0, 0, 0, 0.04);
+    box-shadow:
+      0 0 0 3px rgba(59, 126, 248, 0.15),
+      0 4px 24px rgba(0, 0, 0, 0.04);
   }
 
   .message-input {

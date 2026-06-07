@@ -8,9 +8,16 @@ import {
 } from '../services/chatService.js';
 import { streamChatResponse } from '../services/llmService.js';
 import { AppError } from '../middleware/errorHandler.js';
-import type { ChatMessageRequest, ChatMessageResponse, ConversationHistoryResponse } from '../types/api.js';
+import type {
+    ChatMessageRequest,
+    ChatMessageResponse,
+    ConversationHistoryResponse,
+} from '../types/api.js';
 import { extractEntities, hasEntities } from '../services/entityExtractor.js';
-import { updateConversationMetadata, getConversationMetadata } from '../services/metadataService.js';
+import {
+    updateConversationMetadata,
+    getConversationMetadata,
+} from '../services/metadataService.js';
 
 /**
  * POST /chat/message
@@ -67,15 +74,19 @@ export async function sendMessage(req: Request, res: Response) {
             aiReply += chunk;
         }
     } catch (error) {
-        console.error('❌ Error generating AI response:', error instanceof Error ? error.message : String(error));
+        console.error(
+            '❌ Error generating AI response:',
+            error instanceof Error ? error.message : String(error)
+        );
         if (error instanceof Error && error.cause) {
             console.error('   Cause:', error.cause);
         }
         if (error instanceof Error && error.stack) {
-            console.error('   Stack:', error.stack.split('\n').slice(0,3).join('\n'));
+            console.error('   Stack:', error.stack.split('\n').slice(0, 3).join('\n'));
         }
         // Still save an error message to maintain conversation flow
-        aiReply = "I apologize, but I'm having technical difficulties. Please try again or contact support@spurr.com.";
+        aiReply =
+            "I apologize, but I'm having technical difficulties. Please try again or contact support@spurr.com.";
     }
 
     // Save AI response
@@ -103,7 +114,6 @@ export async function getConversationMessages(req: Request, res: Response) {
 
     // Get conversation
     const conversation = await getConversation(sessionId);
-
 
     if (!conversation) {
         throw new AppError(404, 'Conversation not found');

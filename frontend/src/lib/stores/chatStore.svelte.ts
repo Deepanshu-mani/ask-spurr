@@ -1,340 +1,368 @@
-import type { Message } from "$lib/types";
+import type { Message } from '$lib/types';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 class ChatStore {
-    messages = $state<Message[]>([]);
-    inputMessage = $state("");
-    isLoading = $state(false);
-    error = $state("");
-    sessionId = $state("");
+  messages = $state<Message[]>([]);
+  inputMessage = $state('');
+  isLoading = $state(false);
+  error = $state('');
+  sessionId = $state('');
+  serviceStatus = $state<'checking' | 'online' | 'offline'>('checking');
 
-    // Heartbeat state
-    private heartbeatTimer: any;
-    private heartbeatDelay = 1000;
+  // Heartbeat state
+  private heartbeatTimer: any;
+  private heartbeatDelay = 1000;
 
-    constructor() {
-        // We cannot access localStorage in constructor during SSR, 
-        // so we rely on an init() method or checking browser env in effects.
-        // However, for simplicity in a SPA/client-side context, 
-        // we can initialize in onMount or just expose an init function.
+  constructor() {
+    // We cannot access localStorage in constructor during SSR,
+    // so we rely on an init() method or checking browser env in effects.
+    // However, for simplicity in a SPA/client-side context,
+    // we can initialize in onMount or just expose an init function.
+  }
+
+  init() {
+    const savedSessionId = localStorage.getItem('chatSessionId');
+    const savedMessages = localStorage.getItem('chatMessages');
+
+    if (savedMessages) {
+      try {
+        this.messages = JSON.parse(savedMessages);
+      } catch (e) {
+        console.error('Failed to parse saved messages');
+      }
     }
 
-    init() {
-        const savedSessionId = localStorage.getItem("chatSessionId");
-        const savedMessages = localStorage.getItem("chatMessages");
-
-        if (savedMessages) {
-            try {
-                this.messages = JSON.parse(savedMessages);
-            } catch (e) {
-                console.error("Failed to parse saved messages");
-            }
-        }
-
-        if (savedSessionId) {
-            this.sessionId = savedSessionId;
-            this.loadConversationHistory(savedSessionId);
-        }
-
-        // Listen for online status
-        window.addEventListener("online", () => this.syncOfflineMessages());
-
-        if (navigator.onLine) {
-            this.syncOfflineMessages();
-        }
-
-        // Start keep-alive ping for Render free tier
-        this.startKeepAlive();
-
-        // Auto-save effect logic fits better in the component using $effect usually, 
-        // or we can set up a reaction here if we were using a slightly different pattern.
-        // For this refactor, we'll keep the persistence logic simple: 
-        // we'll update localStorage whenever we modify messages.
+    if (savedSessionId) {
+      this.sessionId = savedSessionId;
+      this.loadConversationHistory(savedSessionId);
     }
 
-    destroy() {
-        if (typeof window !== "undefined") {
-            window.removeEventListener("online", () => this.syncOfflineMessages());
-            this.stopHeartbeat();
-            this.stopKeepAlive();
-        }
+    // Listen for online status
+    window.addEventListener('online', () => this.syncOfflineMessages());
+
+    if (navigator.onLine) {
+      this.syncOfflineMessages();
     }
 
-    // Keep backend alive (Render free tier sleeps after 15min)
-    private keepAliveTimer: any;
+    // Check if the backend is reachable
+    this.checkServiceHealth();
 
-    startKeepAlive() {
-        if (this.keepAliveTimer) return;
+    // Start keep-alive ping for Render free tier
+    this.startKeepAlive();
 
-        // Ping every 5 minutes
-        this.keepAliveTimer = setInterval(async () => {
-            try {
-                await fetch(`${API_URL}/health`);
-                console.log("🏓 Ping sent to keep backend alive");
-            } catch (e) {
-                // Ignore errors
-            }
-        }, 5 * 60 * 1000); // 5 minutes
+    // Auto-save effect logic fits better in the component using $effect usually,
+    // or we can set up a reaction here if we were using a slightly different pattern.
+    // For this refactor, we'll keep the persistence logic simple:
+    // we'll update localStorage whenever we modify messages.
+  }
 
-        // Initial ping
-        fetch(`${API_URL}/health`).catch(() => { });
+  destroy() {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('online', () => this.syncOfflineMessages());
+      this.stopHeartbeat();
+      this.stopKeepAlive();
     }
+  }
 
-    stopKeepAlive() {
-        if (this.keepAliveTimer) {
-            clearInterval(this.keepAliveTimer);
-            this.keepAliveTimer = null;
-        }
-    }
+  // Keep backend alive (Render free tier sleeps after 15min)
+  private keepAliveTimer: any;
 
-    private saveMessages() {
-        if (typeof localStorage !== "undefined" && this.messages.length > 0) {
-            localStorage.setItem("chatMessages", JSON.stringify(this.messages));
-        }
-    }
+  startKeepAlive() {
+    if (this.keepAliveTimer) return;
 
-    async loadConversationHistory(id: string) {
+    // Ping every 5 minutes
+    this.keepAliveTimer = setInterval(
+      async () => {
         try {
-            const response = await fetch(`${API_URL}/chat/${id}`);
-            if (response.ok) {
-                const data = await response.json();
-                const serverMessages = data.messages.map((m: any) => ({
-                    ...m,
-                    status: "sent",
-                }));
-
-                const localUnsentMessages = this.messages.filter(
-                    (m) => m.status === "error" || m.status === "sending"
-                );
-
-                const serverIds = new Set(serverMessages.map((m: any) => m.id));
-                const uniqueLocal = localUnsentMessages.filter(
-                    (m) => !serverIds.has(m.id)
-                );
-
-                this.messages = [...serverMessages, ...uniqueLocal];
-                this.saveMessages();
-            }
-        } catch (err) {
-            console.error("Failed to load history:", err);
+          await fetch(`${API_URL}/health`);
+          console.log('🏓 Ping sent to keep backend alive');
+        } catch (e) {
+          // Ignore errors
         }
+      },
+      5 * 60 * 1000
+    ); // 5 minutes
+
+    // Initial ping
+    fetch(`${API_URL}/health`).catch(() => { });
+  }
+
+  stopKeepAlive() {
+    if (this.keepAliveTimer) {
+      clearInterval(this.keepAliveTimer);
+      this.keepAliveTimer = null;
     }
+  }
 
-    async sendMessage(text: string = this.inputMessage) {
-        if (!text.trim() || this.isLoading) return;
-
-        const userMessage = text.trim();
-        const tempId = Date.now().toString();
-
-        // Clear input if it matches what we are sending (handles retry vs new)
-        if (this.inputMessage === text) {
-            this.inputMessage = "";
+  async checkServiceHealth(retryDelay = 2_000) {
+    try {
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 8_000); // 8s timeout for health check
+      const res = await fetch(`${API_URL}/health`, { signal: controller.signal });
+      if (res.ok) {
+        if (this.serviceStatus === 'offline') {
+          this.syncOfflineMessages();
         }
-
-        this.error = "";
-
-        const tempUserMsg: Message = {
-            id: tempId,
-            sender: "user",
-            text: userMessage,
-            createdAt: new Date().toISOString(),
-            status: "sending",
-        };
-
-        this.messages = [...this.messages, tempUserMsg];
-        this.saveMessages();
-
-        // Set loading AFTER adding user message so it appears first
-        this.isLoading = true;
-
-        await this.processMessage(tempUserMsg, userMessage);
+        this.serviceStatus = 'online';
+        return; // Back online — stop retrying
+      }
+      this.serviceStatus = 'offline';
+    } catch {
+      this.serviceStatus = 'offline';
     }
 
-    async retryMessage(id: string) {
-        const msgIndex = this.messages.findIndex((m) => m.id === id);
-        if (msgIndex === -1 || this.isLoading) return;
+    // Exponential backoff: 2s → 4s → 8s → 16s → 32s → 60s (max)
+    const nextDelay = Math.min(retryDelay * 2, 60_000);
+    console.log(`🔁 Service offline. Retrying health check in ${nextDelay / 1000}s...`);
+    setTimeout(() => this.checkServiceHealth(nextDelay), retryDelay);
+  }
 
-        const msg = this.messages[msgIndex];
-        this.isLoading = true;
-        this.error = "";
-
-        const newMessages = [...this.messages];
-        newMessages[msgIndex] = { ...msg, status: "sending" };
-        this.messages = newMessages;
-        this.saveMessages();
-
-        await this.processMessage(msg, msg.text);
+  private saveMessages() {
+    if (typeof localStorage !== 'undefined' && this.messages.length > 0) {
+      localStorage.setItem('chatMessages', JSON.stringify(this.messages));
     }
+  }
 
-    async processMessage(msgObject: Message, textContent: string) {
-        try {
-            const response = await fetch(`${API_URL}/chat/message`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    message: textContent,
-                    sessionId: this.sessionId || undefined,
-                }),
-            });
+  async loadConversationHistory(id: string) {
+    try {
+      const response = await fetch(`${API_URL}/chat/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        const serverMessages = data.messages.map((m: any) => ({
+          ...m,
+          status: 'sent',
+        }));
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                const detailMsg = errorData.details?.[0]?.message;
-                throw new Error(detailMsg || errorData.error || "Failed to send message");
-            }
-
-            const data = await response.json();
-
-            if (data.sessionId && !this.sessionId) {
-                this.sessionId = data.sessionId;
-                localStorage.setItem("chatSessionId", data.sessionId);
-            }
-
-            this.messages = this.messages.map((m) =>
-                m.id === msgObject.id
-                    ? { ...m, status: "sent", id: data.sessionId ? m.id : m.id }
-                    : m
-            );
-
-            // Auto-sync others
-            this.syncOfflineMessages();
-
-            const aiMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                sender: "ai",
-                text: data.reply,
-                createdAt: new Date().toISOString(),
-                status: "sent",
-            };
-            this.messages = [...this.messages, aiMsg];
-            this.saveMessages();
-
-        } catch (err) {
-            this.messages = this.messages.map((m) =>
-                m.id === msgObject.id ? { ...m, status: "error" } : m
-            );
-            this.saveMessages();
-
-            this.error = err instanceof Error ? err.message : "An error occurred";
-            this.startHeartbeat();
-        } finally {
-            this.isLoading = false;
-        }
-    }
-
-    async syncOfflineMessages() {
-        console.log("🔄 Syncing...");
-        const pendingMessages = this.messages.filter(
-            (m) => m.status === "error" || m.status === "sending"
+        const localUnsentMessages = this.messages.filter(
+          (m) => m.status === 'error' || m.status === 'sending'
         );
 
-        if (pendingMessages.length === 0) return;
+        const serverIds = new Set(serverMessages.map((m: any) => m.id));
+        const uniqueLocal = localUnsentMessages.filter((m) => !serverIds.has(m.id));
 
-        if (pendingMessages.length > 1) {
-            await this.processBatchMessages(pendingMessages);
-        } else {
-            await this.retryMessage(pendingMessages[0].id);
-        }
-    }
-
-    async processBatchMessages(batch: Message[]) {
-        this.isLoading = true;
-        this.error = "";
-
-        const batchIds = new Set(batch.map(m => m.id));
-        this.messages = this.messages.map(m =>
-            batchIds.has(m.id) ? { ...m, status: 'sending' } : m
-        );
+        this.messages = [...serverMessages, ...uniqueLocal];
         this.saveMessages();
+      }
+    } catch (err) {
+      console.error('Failed to load history:', err);
+    }
+  }
 
-        const combinedText = batch.map(m => m.text).join('\n');
+  async sendMessage(text: string = this.inputMessage) {
+    if (!text.trim() || this.isLoading) return;
 
-        try {
-            const response = await fetch(`${API_URL}/chat/message`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    message: combinedText,
-                    sessionId: this.sessionId || undefined,
-                }),
-            });
+    const userMessage = text.trim();
+    const tempId = Date.now().toString();
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                const detailMsg = errorData.details?.[0]?.message;
-                throw new Error(detailMsg || errorData.error || "Failed to sync");
-            }
+    // Clear input if it matches what we are sending (handles retry vs new)
+    if (this.inputMessage === text) {
+      this.inputMessage = '';
+    }
 
-            const data = await response.json();
+    this.error = '';
 
-            if (data.sessionId && !this.sessionId) {
-                this.sessionId = data.sessionId;
-                localStorage.setItem("chatSessionId", data.sessionId);
-            }
+    const tempUserMsg: Message = {
+      id: tempId,
+      sender: 'user',
+      text: userMessage,
+      createdAt: new Date().toISOString(),
+      status: 'sending',
+    };
 
-            this.messages = this.messages.map(m =>
-                batchIds.has(m.id) ? { ...m, status: 'sent' } : m
-            );
+    this.messages = [...this.messages, tempUserMsg];
+    this.saveMessages();
 
-            const aiMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                sender: "ai",
-                text: data.reply,
-                createdAt: new Date().toISOString(),
-                status: "sent",
-            };
-            this.messages = [...this.messages, aiMsg];
-            this.saveMessages();
+    // Set loading AFTER adding user message so it appears first
+    this.isLoading = true;
 
-        } catch (err) {
-            this.messages = this.messages.map(m =>
-                batchIds.has(m.id) ? { ...m, status: 'error' } : m
-            );
-            this.saveMessages();
-            this.startHeartbeat();
-        } finally {
-            this.isLoading = false;
+    await this.processMessage(tempUserMsg, userMessage);
+  }
+
+  async retryMessage(id: string) {
+    const msgIndex = this.messages.findIndex((m) => m.id === id);
+    if (msgIndex === -1 || this.isLoading) return;
+
+    const msg = this.messages[msgIndex];
+    this.isLoading = true;
+    this.error = '';
+
+    const newMessages = [...this.messages];
+    newMessages[msgIndex] = { ...msg, status: 'sending' };
+    this.messages = newMessages;
+    this.saveMessages();
+
+    await this.processMessage(msg, msg.text);
+  }
+
+  async processMessage(msgObject: Message, textContent: string) {
+    // 30-second timeout — handles Render cold-start delays
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+
+    try {
+      const response = await fetch(`${API_URL}/chat/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: textContent,
+          sessionId: this.sessionId || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const detailMsg = errorData.details?.[0]?.message;
+        throw new Error(detailMsg || errorData.error || 'Failed to send message');
+      }
+
+      const data = await response.json();
+
+      if (data.sessionId && !this.sessionId) {
+        this.sessionId = data.sessionId;
+        localStorage.setItem('chatSessionId', data.sessionId);
+      }
+
+      this.messages = this.messages.map((m) =>
+        m.id === msgObject.id ? { ...m, status: 'sent', id: data.sessionId ? m.id : m.id } : m
+      );
+
+      // Auto-sync others
+      this.syncOfflineMessages();
+
+      const aiMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'ai',
+        text: data.reply,
+        createdAt: new Date().toISOString(),
+        status: 'sent',
+      };
+      this.messages = [...this.messages, aiMsg];
+      this.saveMessages();
+    } catch (err) {
+      this.messages = this.messages.map((m) =>
+        m.id === msgObject.id ? { ...m, status: 'error' } : m
+      );
+      this.saveMessages();
+
+      this.error = err instanceof Error ? err.message : 'An error occurred';
+      this.startHeartbeat();
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async syncOfflineMessages() {
+    console.log('🔄 Syncing...');
+    const pendingMessages = this.messages.filter(
+      (m) => m.status === 'error' || m.status === 'sending'
+    );
+
+    if (pendingMessages.length === 0) return;
+
+    if (pendingMessages.length > 1) {
+      await this.processBatchMessages(pendingMessages);
+    } else {
+      await this.retryMessage(pendingMessages[0].id);
+    }
+  }
+
+  async processBatchMessages(batch: Message[]) {
+    this.isLoading = true;
+    this.error = '';
+
+    const batchIds = new Set(batch.map((m) => m.id));
+    this.messages = this.messages.map((m) =>
+      batchIds.has(m.id) ? { ...m, status: 'sending' } : m
+    );
+    this.saveMessages();
+
+    const combinedText = batch.map((m) => m.text).join('\n');
+
+    try {
+      const response = await fetch(`${API_URL}/chat/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: combinedText,
+          sessionId: this.sessionId || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const detailMsg = errorData.details?.[0]?.message;
+        throw new Error(detailMsg || errorData.error || 'Failed to sync');
+      }
+
+      const data = await response.json();
+
+      if (data.sessionId && !this.sessionId) {
+        this.sessionId = data.sessionId;
+        localStorage.setItem('chatSessionId', data.sessionId);
+      }
+
+      this.messages = this.messages.map((m) => (batchIds.has(m.id) ? { ...m, status: 'sent' } : m));
+
+      const aiMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'ai',
+        text: data.reply,
+        createdAt: new Date().toISOString(),
+        status: 'sent',
+      };
+      this.messages = [...this.messages, aiMsg];
+      this.saveMessages();
+    } catch (err) {
+      this.messages = this.messages.map((m) =>
+        batchIds.has(m.id) ? { ...m, status: 'error' } : m
+      );
+      this.saveMessages();
+      this.startHeartbeat();
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  startHeartbeat() {
+    if (this.heartbeatTimer) return;
+
+    console.log(`💓 Heartbeat started (${this.heartbeatDelay}ms)...`);
+    this.heartbeatTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/health`);
+        if (res.ok) {
+          console.log('💓 Backend recovered!');
+          this.stopHeartbeat();
+          this.syncOfflineMessages();
+          return;
         }
+      } catch (e) {
+        /* ignore */
+      }
+
+      this.heartbeatDelay = Math.min(this.heartbeatDelay * 1.5, 30000);
+      this.heartbeatTimer = null;
+      this.startHeartbeat();
+    }, this.heartbeatDelay);
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearTimeout(this.heartbeatTimer);
+      this.heartbeatTimer = null;
     }
+    this.heartbeatDelay = 1000;
+  }
 
-    startHeartbeat() {
-        if (this.heartbeatTimer) return;
-
-        console.log(`💓 Heartbeat started (${this.heartbeatDelay}ms)...`);
-        this.heartbeatTimer = setTimeout(async () => {
-            try {
-                const res = await fetch(`${API_URL}/health`);
-                if (res.ok) {
-                    console.log("💓 Backend recovered!");
-                    this.stopHeartbeat();
-                    this.syncOfflineMessages();
-                    return;
-                }
-            } catch (e) { /* ignore */ }
-
-            this.heartbeatDelay = Math.min(this.heartbeatDelay * 1.5, 30000);
-            this.heartbeatTimer = null;
-            this.startHeartbeat();
-        }, this.heartbeatDelay);
-    }
-
-    stopHeartbeat() {
-        if (this.heartbeatTimer) {
-            clearTimeout(this.heartbeatTimer);
-            this.heartbeatTimer = null;
-        }
-        this.heartbeatDelay = 1000;
-    }
-
-    startNewConversation() {
-        this.messages = [];
-        this.sessionId = "";
-        this.error = "";
-        // Clear all chat data from localStorage
-        localStorage.removeItem("chatSessionId");
-        localStorage.removeItem("chatMessages");
-    }
+  startNewConversation() {
+    this.messages = [];
+    this.sessionId = '';
+    this.error = '';
+    // Clear all chat data from localStorage
+    localStorage.removeItem('chatSessionId');
+    localStorage.removeItem('chatMessages');
+  }
 }
 
 export const chatStore = new ChatStore();

@@ -1,32 +1,32 @@
 <script lang="ts">
-  import { scale, fly } from "svelte/transition";
+  import { scale, fly } from 'svelte/transition';
 
   export let onSuggestionClick: (text: string) => void;
 
   const cards = [
     {
-      emoji: "📦",
-      title: "Shipping Policy",
-      subtitle: "Learn about our delivery options",
-      query: "What is your shipping policy?",
+      emoji: '📦',
+      title: 'Shipping Policy',
+      subtitle: 'Learn about our delivery options',
+      query: 'What is your shipping policy?',
     },
     {
-      emoji: "↩️",
-      title: "Returns & Refunds",
-      subtitle: "Easy 30-day return policy",
-      query: "How do I return an item?",
+      emoji: '↩️',
+      title: 'Returns & Refunds',
+      subtitle: 'Easy 30-day return policy',
+      query: 'How do I return an item?',
     },
     {
-      emoji: "🕐",
-      title: "Support Hours",
+      emoji: '🕐',
+      title: 'Support Hours',
       subtitle: "When we're available to help",
-      query: "What are your support hours?",
+      query: 'What are your support hours?',
     },
     {
-      emoji: "🛍️",
-      title: "My Orders",
-      subtitle: "View active orders and tracking",
-      query: "Show me my active orders and their statuses.",
+      emoji: '🛍️',
+      title: 'My Orders',
+      subtitle: 'View active orders and tracking',
+      query: 'Show me my active orders and their statuses.',
     },
   ];
 </script>

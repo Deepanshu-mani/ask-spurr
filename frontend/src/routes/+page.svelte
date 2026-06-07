@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
-  import { fly, fade } from "svelte/transition";
-  import { cubicOut } from "svelte/easing";
-  import ChatHeader from "$lib/components/ChatHeader.svelte";
-  import MessageBubble from "$lib/components/MessageBubble.svelte";
-  import TypingIndicator from "$lib/components/TypingIndicator.svelte";
-  import ChatInput from "$lib/components/ChatInput.svelte";
-  import WelcomeScreen from "$lib/components/WelcomeScreen.svelte";
-  import { chatStore } from "$lib/stores/chatStore.svelte";
+  import { onMount, tick } from 'svelte';
+  import { fly, fade } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
+  import ChatHeader from '$lib/components/ChatHeader.svelte';
+  import MessageBubble from '$lib/components/MessageBubble.svelte';
+  import TypingIndicator from '$lib/components/TypingIndicator.svelte';
+  import ChatInput from '$lib/components/ChatInput.svelte';
+  import WelcomeScreen from '$lib/components/WelcomeScreen.svelte';
+  import { chatStore } from '$lib/stores/chatStore.svelte';
 
   let messagesContainer = $state<HTMLDivElement>();
   let mounted = $state(false);
@@ -27,7 +27,7 @@
       setTimeout(() => {
         messagesContainer.scrollTo({
           top: messagesContainer.scrollHeight,
-          behavior: "smooth",
+          behavior: 'smooth',
         });
       }, 80);
     }
@@ -36,13 +36,13 @@
   function setSuggestion(text: string) {
     chatStore.inputMessage = text;
     setTimeout(() => {
-      const input = document.querySelector(".message-input") as HTMLInputElement;
+      const input = document.querySelector('.message-input') as HTMLInputElement;
       input?.focus();
     }, 0);
   }
 
   function handleKeyPress(event: KeyboardEvent) {
-    if (event.key === "Enter" && !event.shiftKey) {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       chatStore.sendMessage();
     }
@@ -55,7 +55,7 @@
   {#if mounted}
     <div class="widget-shell" in:fade={{ duration: 350 }}>
       <!-- Header -->
-      <ChatHeader onNewChat={() => chatStore.startNewConversation()} />
+      <ChatHeader onNewChat={() => chatStore.startNewConversation()} serviceStatus={chatStore.serviceStatus} />
 
       <!-- Error toast -->
       {#if chatStore.error}
@@ -65,7 +65,10 @@
           out:fly={{ y: -16, duration: 200 }}
         >
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z" fill="#ef4444"/>
+            <path
+              d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"
+              fill="#ef4444"
+            />
           </svg>
           <span>{chatStore.error}</span>
         </div>
@@ -79,7 +82,7 @@
           {:else}
             <div class="messages-list">
               {#each chatStore.messages as message (message.id)}
-                {#if message.sender === "user"}
+                {#if message.sender === 'user'}
                   <div>
                     <MessageBubble
                       sender={message.sender}
@@ -109,6 +112,13 @@
           {/if}
         </div>
       </div>
+
+      <!-- Offline banner + Input -->
+      {#if chatStore.serviceStatus === 'offline'}
+        <div class="offline-banner">
+          🔴 Offline. Messages will be sent when reconnected.
+        </div>
+      {/if}
 
       <!-- Input -->
       <ChatInput
@@ -191,6 +201,24 @@
     gap: 12px;
     padding: 16px 0 140px; /* Large bottom padding so messages scroll past the floating input */
     min-height: 100%;
+  }
+
+  .offline-banner {
+    position: absolute;
+    bottom: 80px; /* Position above the chat input */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #dc2626;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    text-align: center;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
   }
 
   /* Error toast */
