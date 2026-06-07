@@ -12,7 +12,8 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
     'http://localhost:5173', // Local development
     'http://localhost:3000', // Alternative local port
-    process.env.FRONTEND_URL, // Production frontend URL from env
+    'https://ask-spurr.vercel.app', // Hardcoded fallback for Vercel
+    process.env.FRONTEND_URL?.replace(/\/$/, ''), // Production frontend URL from env (strip trailing slash)
 ].filter(Boolean); // Remove undefined values
 
 app.use(
@@ -21,9 +22,13 @@ app.use(
             // Allow requests with no origin (like mobile apps or curl)
             if (!origin) return callback(null, true);
 
-            if (allowedOrigins.includes(origin)) {
+            // Strip trailing slash from incoming origin just in case
+            const normalizedOrigin = origin.replace(/\/$/, '');
+
+            if (allowedOrigins.includes(normalizedOrigin)) {
                 callback(null, true);
             } else {
+                console.error(`CORS blocked request from origin: ${origin}`);
                 callback(new Error('Not allowed by CORS'));
             }
         },
